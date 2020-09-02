@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	rithdb "github.com/enorith/database"
+	db "github.com/enorith/database"
 	. "github.com/enorith/framework/contracts"
 	"github.com/enorith/framework/http/contract"
 	"golang.org/x/crypto/bcrypt"
@@ -43,7 +43,7 @@ type UserProvider interface {
 type DatabaseUserProvider struct {
 	user    User
 	table   string
-	builder *rithdb.QueryBuilder
+	builder *db.QueryBuilder
 }
 
 func (d *DatabaseUserProvider) FindUserByRequest(r contract.RequestContract) (User, error) {
@@ -73,7 +73,7 @@ func (d *DatabaseUserProvider) FindUserById(id uint64) (User, error) {
 	return d.itemToUser(result)
 }
 
-func (d *DatabaseUserProvider) itemToUser(item rithdb.CollectionItem) (User, error) {
+func (d *DatabaseUserProvider) itemToUser(item *db.CollectionItem) (User, error) {
 	if !item.IsValid() {
 		return nil, errors.New("invalid user data")
 	}

@@ -8,7 +8,7 @@ import (
 type User interface {
 	UserIdentifier() uint64
 	UserIdentifierName() string
-	Unmarshal(data database.CollectionItem)
+	Unmarshal(data *database.CollectionItem)
 	CloneUser() User
 }
 

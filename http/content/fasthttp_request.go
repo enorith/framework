@@ -6,9 +6,9 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"errors"
-	b "github.com/CaoJiayuan/goutilities/byt"
 	"github.com/enorith/framework/contracts"
 	"github.com/enorith/framework/http/contract"
+	b "github.com/enorith/supports/byt"
 	"github.com/valyala/fasthttp"
 	"strconv"
 )

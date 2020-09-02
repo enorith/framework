@@ -1,7 +1,7 @@
 package cache
 
 import (
-	. "github.com/CaoJiayuan/gocache"
+	. "github.com/enorith/cache"
 	"github.com/enorith/environment"
 	"github.com/enorith/framework/kernel"
 	appRedis "github.com/enorith/framework/redis"

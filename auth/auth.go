@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
-	rithdb "github.com/enorith/database"
+	db "github.com/enorith/database"
 	. "github.com/enorith/framework/contracts"
 	"github.com/enorith/framework/database"
 	"github.com/enorith/framework/http/contract"
@@ -48,7 +48,7 @@ func (a *GenericAuthenticator) GetUserProvider() UserProvider {
 }
 
 type GenericUser struct {
-	item rithdb.CollectionItem
+	item *db.CollectionItem
 }
 
 func (u *GenericUser) MarshalJSON() ([]byte, error) {
@@ -69,7 +69,7 @@ func (u *GenericUser) CloneUser() User {
 	return &GenericUser{}
 }
 
-func (u *GenericUser) Unmarshal(data rithdb.CollectionItem) {
+func (u *GenericUser) Unmarshal(data *db.CollectionItem) {
 	u.item = data
 }
 

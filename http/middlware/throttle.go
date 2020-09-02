@@ -2,7 +2,7 @@ package middlware
 
 import (
 	"fmt"
-	"github.com/CaoJiayuan/gocache"
+	gocache "github.com/enorith/cache"
 	"github.com/enorith/framework/cache"
 	"github.com/enorith/framework/exception"
 	"github.com/enorith/framework/http"

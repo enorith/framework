@@ -3,11 +3,11 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"github.com/CaoJiayuan/goutilities/str"
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/enorith/framework/contracts"
 	"github.com/enorith/framework/http/content"
 	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/supports/str"
 	"strconv"
 	"time"
 )
