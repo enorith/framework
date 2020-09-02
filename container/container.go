@@ -5,12 +5,21 @@ import (
 	"reflect"
 )
 
+// InstanceRegister register instance for container
 type InstanceRegister func(c *Container) reflect.Value
 
+// InitializeHandler interface for conditional initializer
+type InitializeHandler interface {
+	Initialize(abs interface{}, last reflect.Value) reflect.Value
+	When(abs interface{}) bool
+}
+
+// Initializer initializer function
 type Initializer func(abs interface{}, last reflect.Value) reflect.Value
 
 type initializerChain []Initializer
 
+// InitializerConditionFunc initializer conditional function
 type InitializerConditionFunc func(abs interface{}) bool
 
 func (ic initializerChain) do(abs interface{}) reflect.Value {
@@ -50,6 +59,10 @@ type Container struct {
 	resolved map[string]reflect.Value
 
 	chain initializerChain
+}
+
+func (c *Container) HandleInitialize(h InitializeHandler) *Container {
+	return c.InitializeWith(conditionInitializer(InitializerConditionFunc(h.When), h.Initialize))
 }
 
 func (c *Container) InitializeWith(i Initializer) *Container {
@@ -141,7 +154,7 @@ func (c *Container) Instance(abs interface{}, params ...interface{}) reflect.Val
 		if va.IsValid() {
 			instance = va
 		} else {
-			instance = reflect.ValueOf(abs)
+			instance = reflect.Value{}
 		}
 	}
 
@@ -149,7 +162,7 @@ func (c *Container) Instance(abs interface{}, params ...interface{}) reflect.Val
 		if r := c.getResolve(t); r.IsValid() {
 			instance = r
 		} else {
-			return reflect.Value{}
+			fallback()
 		}
 	} else if t, ok := abs.(reflect.Type); ok {
 		str := t.String()
@@ -177,6 +190,28 @@ func (c *Container) Instance(abs interface{}, params ...interface{}) reflect.Val
 	}
 
 	return instance
+}
+
+func (c *Container) InstanceFor(abs interface{}, out interface{}, params ...interface{}) error {
+	v := c.Instance(abs)
+
+	o := reflect.ValueOf(out)
+
+	if !o.IsValid() {
+		return fmt.Errorf("instance for abstact [%s]", TypeString(abs))
+	}
+
+	if o.Kind() == reflect.Ptr {
+		o = o.Elem()
+	}
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	o.Set(v)
+
+	return nil
 }
 
 func (c *Container) Invoke(f interface{}, params ...interface{}) ([]reflect.Value, error) {

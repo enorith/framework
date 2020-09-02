@@ -1,9 +1,11 @@
 package container_test
 
 import (
-	"github.com/enorith/framework/container"
+	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/enorith/framework/container"
 )
 
 type foo struct {
@@ -107,6 +109,52 @@ func TestTypeString(t *testing.T) {
 				t.Fatalf("type if %v expect string [%s], got [%s]", v.abs, v.str, str)
 			}
 		})
+	}
+}
+
+func TestContainer_InstanceFor(t *testing.T) {
+	c := container.New()
+
+	c.BindFunc("foo", func(c *container.Container) reflect.Value {
+
+		return reflect.ValueOf(&foo{"test name"})
+	}, false)
+
+	var f foo
+
+	c.InstanceFor("foo", &f)
+	if f.name != "test name" {
+		t.Fatal("instance failed")
+	}
+	t.Log(f)
+}
+
+type InitializeHandler struct {
+}
+
+func (i InitializeHandler) Initialize(abs interface{}, last reflect.Value) reflect.Value {
+
+	return reflect.ValueOf(foo{"test foo"})
+}
+
+func (i InitializeHandler) When(abs interface{}) bool {
+
+	str := container.TypeString(abs)
+
+	fmt.Println(str)
+
+	return str == "container_test.foo"
+}
+
+func TestContainer_HandleInitialize(t *testing.T) {
+	c := container.New()
+
+	c.HandleInitialize(InitializeHandler{})
+
+	i := c.Instance("container_test.foo")
+	t.Log(i)
+	if !i.IsValid() {
+		t.Fatal("instance failed")
 	}
 }
 
