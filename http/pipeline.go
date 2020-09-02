@@ -1,0 +1,86 @@
+package http
+
+import "github.com/enorith/framework/http/contract"
+
+//PipeHandler destination handler
+type PipeHandler func(r contract.RequestContract) contract.ResponseContract
+
+//PipeFunc request middleware function
+type PipeFunc func(r contract.RequestContract, next PipeHandler) contract.ResponseContract
+
+//Pipeline is request pipeline prepare for request middleware
+type Pipeline struct {
+	pipes []PipeFunc
+	r     contract.RequestContract
+}
+
+//Send request to pipeline
+func (p *Pipeline) Send(r contract.RequestContract) *Pipeline {
+	p.r = r
+	return p
+}
+
+//Through middleware
+func (p *Pipeline) Through(pipe interface{}) *Pipeline {
+	if p.pipes == nil {
+		p.pipes = []PipeFunc{}
+	}
+	p.pipes = append(p.pipes, p.preparePipe(pipe))
+
+	return p
+}
+
+//ThroughFunc through middleware function
+func (p *Pipeline) ThroughFunc(pipe PipeFunc) *Pipeline {
+	p.Through(pipe)
+	return p
+}
+
+//ThroughMiddleware through middleware struct
+func (p *Pipeline) ThroughMiddleware(pipe RequestMiddleware) *Pipeline {
+	p.Through(pipe)
+	return p
+}
+
+//Then final destination
+func (p *Pipeline) Then(handler PipeHandler) contract.ResponseContract {
+
+	return func(r contract.RequestContract) contract.ResponseContract {
+		if p.pipes != nil && len(p.pipes) > 0 {
+			next := p.prepareNext(0, handler)
+			return p.pipes[0](r, next)
+		}
+		return handler(r)
+	}(p.r)
+}
+
+func (p *Pipeline) prepareNext(now int, handler PipeHandler) PipeHandler {
+	l := len(p.pipes)
+	var next PipeHandler
+	if now+1 >= l {
+		next = handler
+	} else {
+		next = func(r contract.RequestContract) contract.ResponseContract {
+			return p.pipes[now+1](r, p.prepareNext(now+1, handler))
+		}
+	}
+
+	return next
+}
+
+func (p *Pipeline) preparePipe(pipe interface{}) PipeFunc {
+
+	if t, ok := pipe.(PipeFunc); ok {
+		return t
+	}
+
+	if t, ok := pipe.(RequestMiddleware); ok {
+		return func(r contract.RequestContract, next PipeHandler) contract.ResponseContract {
+			return t.Handle(r, next)
+		}
+	}
+
+	return func(r contract.RequestContract, next PipeHandler) contract.ResponseContract {
+		return next(r)
+	}
+}
