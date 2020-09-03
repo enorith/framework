@@ -2,6 +2,7 @@ package database
 
 import (
 	"github.com/enorith/database"
+	"github.com/enorith/database/orm"
 	"github.com/enorith/database/rithythm"
 	"github.com/enorith/framework/cache"
 	"github.com/enorith/framework/container"
@@ -27,6 +28,9 @@ func (s *ServiceProvider) Register(app *kernel.Application) {
 	})
 	app.BindRuntimeFunc(&database.QueryBuilder{}, func(c *container.Container) reflect.Value {
 		return reflect.ValueOf(NewDefaultBuilder())
+	}, false)
+	app.BindRuntimeFunc(&orm.Builder{}, func(c *container.Container) reflect.Value {
+		return reflect.ValueOf(&orm.Builder{QueryBuilder: NewDefaultBuilder()})
 	}, false)
 }
 

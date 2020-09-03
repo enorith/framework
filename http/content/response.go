@@ -63,7 +63,7 @@ func (r *Response) Headers() map[string]string {
 	return r.headers
 }
 
-//StatusCode status code
+//WithStatusCode status code
 func (r *Response) StatusCode() int {
 	return r.statusCode
 }

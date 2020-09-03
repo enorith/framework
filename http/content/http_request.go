@@ -22,6 +22,7 @@ type NetHttpRequest struct {
 	params       map[string]string
 	signature    []byte
 	user         contracts.User
+	content      []byte
 }
 
 func (n *NetHttpRequest) Context() context.Context {
@@ -107,9 +108,14 @@ func (n *NetHttpRequest) GetClientIp() string {
 }
 
 func (n *NetHttpRequest) GetContent() []byte {
+	if n.content != nil {
+		return n.content
+	}
+
 	defer n.origin.Body.Close()
 	b, _ := ioutil.ReadAll(n.origin.Body)
 
+	n.content = b
 	return b
 }
 

@@ -27,7 +27,6 @@ func (h *StandardErrorHandler) BaseHandle(e interface{}, r contract.RequestContr
 		ex = exception.NewException(t, code)
 	} else if t, ok := e.(exception.HttpException); ok {
 		ex = t
-		code = t.StatusCode()
 		headers = t.Headers()
 	} else if t, ok := e.(exception.Exception); ok {
 		ex = t
@@ -35,6 +34,10 @@ func (h *StandardErrorHandler) BaseHandle(e interface{}, r contract.RequestContr
 		ex = exception.NewExceptionFromError(t, code)
 	} else {
 		ex = exception.NewException("undefined exception", code)
+	}
+
+	if t, ok := e.(contract.WithStatusCode); ok {
+		code = t.StatusCode()
 	}
 
 	if r.ExceptsJson() {

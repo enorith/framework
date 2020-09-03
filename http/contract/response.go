@@ -17,3 +17,7 @@ type TemplateResponseContract interface {
 	Template() *template.Template
 	TemplateData() interface{}
 }
+
+type WithStatusCode interface {
+	StatusCode() int
+}

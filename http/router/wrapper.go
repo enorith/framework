@@ -48,9 +48,9 @@ var DefaultResultHandler = func(val []reflect.Value, err error) contract.Respons
 
 	if len(val) > 1 {
 		e := val[1].Interface()
-		_, isErr := e.(error) // assume second return value is an error
+		er, isErr := e.(error) // assume second return value is an error
 		if isErr && e != nil {
-			return content.ErrResponseFromError(err, 500, nil)
+			return content.ErrResponseFromError(er, 500, nil)
 		}
 	}
 
@@ -264,9 +264,10 @@ func convertResponse(data interface{}) contract.ResponseContract {
 		return content.NewResponse(j, content.JsonHeader(), 200)
 	} else if t, ok := data.(fmt.Stringer); ok { // return string
 		return content.TextResponse(t.String(), 200)
+	} else {
+		// fallback to json
+		return content.JsonResponse(data, 200, nil)
 	}
-
-	return content.ErrResponseFromError(errors.New("invalid handler return"), 500, nil)
 }
 
 func NewWrapper(app *kernel.Application) *Wrapper {

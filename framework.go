@@ -11,6 +11,7 @@ import (
 	"github.com/enorith/framework/redis"
 	"github.com/joho/godotenv"
 	"github.com/valyala/fasthttp"
+	"log"
 	net "net/http"
 )
 
@@ -70,7 +71,7 @@ func Serve(addr string, routeRegister RouteHolder, structure StandardAppStructur
 	}
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
