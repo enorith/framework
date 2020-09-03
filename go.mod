@@ -6,7 +6,7 @@ require (
 	github.com/buger/jsonparser v1.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/enorith/cache v0.0.1
-	github.com/enorith/database v0.0.7
+	github.com/enorith/database v0.0.8
 	github.com/enorith/environment v0.0.1
 	github.com/enorith/supports v0.0.1
 	github.com/go-errors/errors v1.1.1
