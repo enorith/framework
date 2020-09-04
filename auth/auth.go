@@ -6,7 +6,7 @@ import (
 	db "github.com/enorith/database"
 	. "github.com/enorith/framework/contracts"
 	"github.com/enorith/framework/database"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"sync"
 )
 
@@ -26,9 +26,9 @@ var (
 )
 
 type Authenticator interface {
-	Guard(r contract.RequestContract) (User, error)
-	Check(r contract.RequestContract) bool
-	Auth(u User) contract.ResponseContract
+	Guard(r contracts.RequestContract) (User, error)
+	Check(r contracts.RequestContract) bool
+	Auth(u User) contracts.ResponseContract
 }
 
 type GenericAuthenticator struct {
@@ -78,15 +78,15 @@ type AuthenticateManager struct {
 	authenticatorName string
 }
 
-func (m *AuthenticateManager) Guard(r contract.RequestContract) (User, error) {
+func (m *AuthenticateManager) Guard(r contracts.RequestContract) (User, error) {
 	return m.authenticator.Guard(r)
 }
 
-func (m *AuthenticateManager) Check(r contract.RequestContract) bool {
+func (m *AuthenticateManager) Check(r contracts.RequestContract) bool {
 	return m.authenticator.Check(r)
 }
 
-func (m *AuthenticateManager) Auth(u User) contract.ResponseContract {
+func (m *AuthenticateManager) Auth(u User) contracts.ResponseContract {
 	return m.authenticator.Auth(u)
 }
 

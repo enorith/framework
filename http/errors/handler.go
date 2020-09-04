@@ -3,23 +3,23 @@ package errors
 import (
 	"github.com/enorith/framework/exception"
 	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"github.com/enorith/framework/kernel"
 )
 
 type ErrorHandler interface {
-	HandleError(e interface{}, r contract.RequestContract) contract.ResponseContract
+	HandleError(e interface{}, r contracts.RequestContract) contracts.ResponseContract
 }
 
 type StandardErrorHandler struct {
 	App *kernel.Application
 }
 
-func (h *StandardErrorHandler) HandleError(e interface{}, r contract.RequestContract) contract.ResponseContract {
+func (h *StandardErrorHandler) HandleError(e interface{}, r contracts.RequestContract) contracts.ResponseContract {
 	return h.BaseHandle(e, r)
 }
 
-func (h *StandardErrorHandler) BaseHandle(e interface{}, r contract.RequestContract) contract.ResponseContract {
+func (h *StandardErrorHandler) BaseHandle(e interface{}, r contracts.RequestContract) contracts.ResponseContract {
 	var ex exception.Exception
 	var code = 500
 	var headers map[string]string = nil
@@ -36,7 +36,7 @@ func (h *StandardErrorHandler) BaseHandle(e interface{}, r contract.RequestContr
 		ex = exception.NewException("undefined exception", code)
 	}
 
-	if t, ok := e.(contract.WithStatusCode); ok {
+	if t, ok := e.(contracts.WithStatusCode); ok {
 		code = t.StatusCode()
 	}
 

@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 )
 
-func NetHttpHandlerFromHttp(request *content.NetHttpRequest, h http.Handler) contract.ResponseContract {
+func NetHttpHandlerFromHttp(request *content.NetHttpRequest, h http.Handler) contracts.ResponseContract {
 	r, ow := request.Origin(), request.OriginWriter()
 
 	h.ServeHTTP(ow, r)

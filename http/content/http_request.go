@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/enorith/framework/contracts"
-	"github.com/enorith/framework/http/contract"
+	. "github.com/enorith/framework/http/contracts"
 	"github.com/enorith/supports/byt"
 	"io/ioutil"
 	"net"
@@ -45,6 +45,10 @@ func (n *NetHttpRequest) ExceptsJson() bool {
 	return byt.Contains(n.Accepts(), []byte("/json"), []byte("+json"))
 }
 
+func (n *NetHttpRequest) RequestWithJson() bool {
+	return byt.Contains(n.Header("Content-Type"), []byte("application/json"))
+}
+
 func (n *NetHttpRequest) IsXmlHttpRequest() bool {
 	return bytes.Equal(n.Header("X-Requested-With"), []byte("XMLHttpRequest"))
 }
@@ -74,6 +78,15 @@ func (n *NetHttpRequest) Get(key string) []byte {
 	}
 
 	return GetJsonValue(n, key)
+}
+
+func (n *NetHttpRequest) File(key string) (UploadFile, error) {
+	_, h, err := n.origin.FormFile(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &uploadFile{header: h}, nil
 }
 
 func (n *NetHttpRequest) GetInt(key string) (int, error) {
@@ -153,13 +166,13 @@ func (n *NetHttpRequest) HeaderString(key string) string {
 	return n.origin.Header.Get(key)
 }
 
-func (n *NetHttpRequest) SetHeader(key string, value []byte) contract.RequestContract {
+func (n *NetHttpRequest) SetHeader(key string, value []byte) RequestContract {
 	n.origin.Header.Set(key, string(value))
 
 	return n
 }
 
-func (n *NetHttpRequest) SetHeaderString(key, value string) contract.RequestContract {
+func (n *NetHttpRequest) SetHeaderString(key, value string) RequestContract {
 	n.origin.Header.Set(key, value)
 
 	return n

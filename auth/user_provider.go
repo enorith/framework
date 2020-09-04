@@ -4,7 +4,7 @@ import (
 	"errors"
 	db "github.com/enorith/database"
 	. "github.com/enorith/framework/contracts"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"golang.org/x/crypto/bcrypt"
 	"sync"
 )
@@ -37,7 +37,7 @@ func RegisterProvider(name string, register ProviderRegister) {
 
 type UserProvider interface {
 	FindUserById(id uint64) (User, error)
-	FindUserByRequest(r contract.RequestContract) (User, error)
+	FindUserByRequest(r contracts.RequestContract) (User, error)
 }
 
 type DatabaseUserProvider struct {
@@ -46,7 +46,7 @@ type DatabaseUserProvider struct {
 	builder *db.QueryBuilder
 }
 
-func (d *DatabaseUserProvider) FindUserByRequest(r contract.RequestContract) (User, error) {
+func (d *DatabaseUserProvider) FindUserByRequest(r contracts.RequestContract) (User, error) {
 	result, findErr := d.builder.From(d.table).AndWhere(UserNameField, "=", r.GetString(UserNameField)).First()
 	if findErr != nil {
 		return nil, findErr

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/enorith/framework/exception"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 )
 
 var (
@@ -48,7 +48,7 @@ func (r *Response) Handled() bool {
 	return r.handled
 }
 
-func (r *Response) SetHeader(key string, value string) contract.ResponseContract {
+func (r *Response) SetHeader(key string, value string) contracts.ResponseContract {
 	r.headers[key] = value
 	return r
 }
@@ -131,7 +131,15 @@ func ErrResponse(e exception.Exception, code int, headers map[string]string) *Er
 }
 
 func ErrResponseFromError(e error, code int, headers map[string]string) *ErrorResponse {
-	return ErrResponse(exception.NewExceptionFromError(e, 500), code, headers)
+	var ex exception.Exception
+	if es, ok := e.(contracts.WithStatusCode); ok {
+		ex = exception.NewHttpExceptionFromError(e, es.StatusCode(), 0, headers)
+		headers = nil
+	} else {
+		ex = exception.NewExceptionFromError(e, 500)
+	}
+
+	return ErrResponse(ex, code, headers)
 }
 
 func HttpErrorResponse(message string, statusCode int, code int, headers map[string]string) *ErrorResponse {
@@ -154,7 +162,7 @@ func TextResponse(content string, code int) *Response {
 	return NewResponse([]byte(content), TextHeader(), code)
 }
 
-func JsonResponse(data interface{}, code int, headers map[string]string) contract.ResponseContract {
+func JsonResponse(data interface{}, code int, headers map[string]string) contracts.ResponseContract {
 	var j []byte
 	var err error
 	if b, ok := data.([]byte); ok {

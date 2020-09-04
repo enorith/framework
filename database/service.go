@@ -32,6 +32,10 @@ func (s *ServiceProvider) Register(app *kernel.Application) {
 	app.BindRuntimeFunc(&orm.Builder{}, func(c *container.Container) reflect.Value {
 		return reflect.ValueOf(&orm.Builder{QueryBuilder: NewDefaultBuilder()})
 	}, false)
+
+	app.ConfigRuntime(func(runtime *kernel.Application) {
+
+	})
 }
 
 func (s *ServiceProvider) Boot(app *kernel.Application) {
@@ -51,4 +55,18 @@ func NewProvider() *ServiceProvider {
 
 func NewDefaultBuilder() *database.QueryBuilder {
 	return database.NewBuilder(DB.Clone())
+}
+
+type ModelInjector struct {
+	builder *orm.Builder
+}
+
+func (m ModelInjector) Injection(abs interface{}, last reflect.Value) reflect.Value {
+
+	panic("implement me")
+}
+
+func (m ModelInjector) When(abs interface{}) bool {
+
+	return false
 }

@@ -2,15 +2,16 @@ package container
 
 import (
 	"fmt"
+	"github.com/enorith/supports/reflection"
 	"reflect"
 )
 
 // InstanceRegister register instance for container
 type InstanceRegister func(c *Container) reflect.Value
 
-// InitializeHandler interface for conditional initializer
-type InitializeHandler interface {
-	Initialize(abs interface{}, last reflect.Value) reflect.Value
+// Injector interface for conditional initializer
+type Injector interface {
+	Injection(abs interface{}, last reflect.Value) reflect.Value
 	When(abs interface{}) bool
 }
 
@@ -39,8 +40,8 @@ func conditionInitializer(requireAbs interface{}, i Initializer) Initializer {
 				return i(abs, last)
 			}
 		} else {
-			as := TypeString(abs)
-			rs := TypeString(requireAbs)
+			as := reflection.TypeString(abs)
+			rs := reflection.TypeString(requireAbs)
 
 			if as == rs {
 				return i(abs, last)
@@ -61,8 +62,8 @@ type Container struct {
 	chain initializerChain
 }
 
-func (c *Container) HandleInitialize(h InitializeHandler) *Container {
-	return c.InitializeWith(conditionInitializer(InitializerConditionFunc(h.When), h.Initialize))
+func (c *Container) HandleInitialize(h Injector) *Container {
+	return c.InitializeWith(conditionInitializer(InitializerConditionFunc(h.When), h.Injection))
 }
 
 func (c *Container) InitializeWith(i Initializer) *Container {
@@ -86,7 +87,7 @@ func (c *Container) Bind(abs, instance interface{}, singleton bool) {
 		instance = abs
 	}
 
-	typ := TypeString(abs)
+	typ := reflection.TypeString(abs)
 
 	c.registers[typ] = c.getResolver(instance)
 	c.singletons[typ] = singleton
@@ -109,7 +110,7 @@ func (c *Container) Singleton(abs interface{}, instance interface{}) {
 }
 
 func (c *Container) IsSingleton(abs interface{}) bool {
-	typ := TypeString(abs)
+	typ := reflection.TypeString(abs)
 
 	if v, ok := c.singletons[typ]; ok {
 		return v
@@ -173,7 +174,7 @@ func (c *Container) Instance(abs interface{}, params ...interface{}) reflect.Val
 		}
 
 	} else if c.Bound(abs) {
-		str := TypeString(abs)
+		str := reflection.TypeString(abs)
 		if r := c.getResolve(str); r.IsValid() {
 			instance = r
 		}
@@ -198,7 +199,7 @@ func (c *Container) InstanceFor(abs interface{}, out interface{}, params ...inte
 	o := reflect.ValueOf(out)
 
 	if !o.IsValid() {
-		return fmt.Errorf("instance for abstact [%s]", TypeString(abs))
+		return fmt.Errorf("instance for abstact [%s]", reflection.TypeString(abs))
 	}
 
 	if o.Kind() == reflect.Ptr {
@@ -231,7 +232,7 @@ func (c *Container) Invoke(f interface{}, params ...interface{}) ([]reflect.Valu
 		argType := t.In(i)
 		param := c.Instance(argType)
 		if !param.IsValid() {
-			return nil, fmt.Errorf("value not found for type %v", argType)
+			return nil, fmt.Errorf("unable to inject %v, param %v invalid", t.String(), argType)
 		}
 		in[i] = param
 	}
@@ -261,7 +262,7 @@ func (c *Container) getResolve(abs string) reflect.Value {
 }
 
 func (c *Container) Bound(abs interface{}) bool {
-	s := TypeString(abs)
+	s := reflection.TypeString(abs)
 	_, o := c.registers[s]
 
 	return o

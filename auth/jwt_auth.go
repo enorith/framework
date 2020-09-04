@@ -6,7 +6,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/enorith/framework/contracts"
 	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"github.com/enorith/supports/str"
 	"strconv"
 	"time"
@@ -27,7 +27,7 @@ type JwtAuthenticator struct {
 	GenericAuthenticator
 }
 
-func (j *JwtAuthenticator) Guard(r contract.RequestContract) (User, error) {
+func (j *JwtAuthenticator) Guard(r contracts.RequestContract) (User, error) {
 	token, tokenErr := r.BearerToken()
 	if tokenErr != nil {
 		return nil, tokenErr
@@ -52,7 +52,7 @@ func (j *JwtAuthenticator) Guard(r contract.RequestContract) (User, error) {
 	return j.GetUserProvider().FindUserById(id)
 }
 
-func (j *JwtAuthenticator) Check(r contract.RequestContract) bool {
+func (j *JwtAuthenticator) Check(r contracts.RequestContract) bool {
 	u, err := j.Guard(r)
 
 	return u != nil && err == nil
@@ -91,7 +91,7 @@ func (j *JwtAuthenticator) FromUser(u User) (string, error, int64) {
 	return tokenString, err, exp
 }
 
-func (j *JwtAuthenticator) Auth(u User) contract.ResponseContract {
+func (j *JwtAuthenticator) Auth(u User) contracts.ResponseContract {
 	tokenString, err, exp := j.FromUser(u)
 
 	if err != nil {

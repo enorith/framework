@@ -78,9 +78,10 @@ func Serve(addr string, routeRegister RouteHolder, structure StandardAppStructur
 func GetFastHttpServer(kernel *http.Kernel) *fasthttp.Server {
 
 	return &fasthttp.Server{
-		Handler:      kernel.FastHttpHandler,
-		Concurrency:  kernel.RequestCurrency,
-		TCPKeepalive: kernel.IsKeepAlive(),
+		Handler:            kernel.FastHttpHandler,
+		Concurrency:        kernel.RequestCurrency,
+		TCPKeepalive:       kernel.IsKeepAlive(),
+		MaxRequestBodySize: kernel.MaxRequestBodySize,
 	}
 }
 

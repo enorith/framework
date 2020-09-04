@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/enorith/framework/exception"
 	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"github.com/enorith/framework/kernel"
 	"net/http"
 	"reflect"
@@ -17,27 +17,27 @@ import (
 var MethodSplitter = "@"
 
 type CRUDHandler interface {
-	Index(request contract.RequestContract) json.Marshaler
-	Show(request contract.RequestContract, id int64) json.Marshaler
-	Store(request contract.RequestContract) contract.ResponseContract
-	Update(request contract.RequestContract, id int64) contract.ResponseContract
-	Delete(request contract.RequestContract, id int64) contract.ResponseContract
+	Index(request contracts.RequestContract) json.Marshaler
+	Show(request contracts.RequestContract, id int64) json.Marshaler
+	Store(request contracts.RequestContract) contracts.ResponseContract
+	Update(request contracts.RequestContract, id int64) contracts.ResponseContract
+	Delete(request contracts.RequestContract, id int64) contracts.ResponseContract
 }
 
 type Handler interface {
-	HandleRoute(r contract.RequestContract) contract.ResponseContract
+	HandleRoute(r contracts.RequestContract) contracts.ResponseContract
 }
 
 //ResultHandler handle return result
-type ResultHandler func(val []reflect.Value, err error) contract.ResponseContract
+type ResultHandler func(val []reflect.Value, err error) contracts.ResponseContract
 
 type GroupHandler func(r *Wrapper)
 
 type RequestResolver interface {
-	ResolveRequest(r contract.RequestContract, runtime *kernel.Application)
+	ResolveRequest(r contracts.RequestContract, runtime *kernel.Application)
 }
 
-var DefaultResultHandler = func(val []reflect.Value, err error) contract.ResponseContract {
+var DefaultResultHandler = func(val []reflect.Value, err error) contracts.ResponseContract {
 	if err != nil {
 		return content.ErrResponseFromError(err, 500, nil)
 	}
@@ -59,7 +59,7 @@ var DefaultResultHandler = func(val []reflect.Value, err error) contract.Respons
 	return convertResponse(data)
 }
 
-var invalidHandler RouteHandler = func(r contract.RequestContract) contract.ResponseContract {
+var invalidHandler RouteHandler = func(r contracts.RequestContract) contracts.ResponseContract {
 	return content.ErrResponseFromError(fmt.Errorf("invalid route handler if [%s] %s",
 		r.GetMethod(), r.GetPathBytes()), 500, nil)
 }
@@ -136,23 +136,23 @@ func (w *Wrapper) Group(g GroupHandler, prefix string, middleware ...string) {
 //CRUD register simple crud routes
 func (w *Wrapper) CRUD(path string, handler CRUDHandler, middleware ...string) {
 	w.Group(func(r *Wrapper) {
-		r.HandleGet("", func(r contract.RequestContract) contract.ResponseContract {
+		r.HandleGet("", func(r contracts.RequestContract) contracts.ResponseContract {
 			return content.JsonResponse(handler.Index(r), 200, content.DefaultHeader())
 		})
-		r.HandleGet("/:id", func(r contract.RequestContract) contract.ResponseContract {
+		r.HandleGet("/:id", func(r contracts.RequestContract) contracts.ResponseContract {
 			id, _ := strconv.ParseInt(r.Param("id"), 10, 64)
 
 			return content.JsonResponse(handler.Show(r, id), 200, content.DefaultHeader())
 		})
-		r.HandlePost("", func(r contract.RequestContract) contract.ResponseContract {
+		r.HandlePost("", func(r contracts.RequestContract) contracts.ResponseContract {
 			return handler.Store(r)
 		})
-		r.HandlePut("/:id", func(r contract.RequestContract) contract.ResponseContract {
+		r.HandlePut("/:id", func(r contracts.RequestContract) contracts.ResponseContract {
 			id, _ := strconv.ParseInt(r.Param("id"), 10, 64)
 
 			return handler.Update(r, id)
 		})
-		r.HandleDelete("/:id", func(r contract.RequestContract) contract.ResponseContract {
+		r.HandleDelete("/:id", func(r contracts.RequestContract) contracts.ResponseContract {
 			id, _ := strconv.ParseInt(r.Param("id"), 10, 64)
 
 			return handler.Delete(r, id)
@@ -194,13 +194,13 @@ func (w *Wrapper) wrap(handler interface{}) (RouteHandler, error) {
 		if !exists {
 			panic(fmt.Sprintf("panic: router: controller [%s] not registered", name))
 		}
-		return func(req contract.RequestContract) contract.ResponseContract {
+		return func(req contracts.RequestContract) contracts.ResponseContract {
 			runtime := w.getRuntimeApp(req)
 			val, err := runtime.MethodCall(controller, method)
 			return w.handleResult(val, err)
 		}, nil
 	} else if reflect.TypeOf(handler).Kind() == reflect.Func { // function
-		return func(req contract.RequestContract) contract.ResponseContract {
+		return func(req contracts.RequestContract) contracts.ResponseContract {
 			runtime := w.getRuntimeApp(req)
 			val, err := runtime.Invoke(handler)
 			return w.handleResult(val, err)
@@ -209,7 +209,7 @@ func (w *Wrapper) wrap(handler interface{}) (RouteHandler, error) {
 	panic(fmt.Sprintf("panic: router handler expect string or func, %s giving", reflect.TypeOf(handler).Kind()))
 }
 
-func (w *Wrapper) handleResult(val []reflect.Value, err error) contract.ResponseContract {
+func (w *Wrapper) handleResult(val []reflect.Value, err error) contracts.ResponseContract {
 
 	if w.ResultHandler == nil {
 		return DefaultResultHandler(val, err)
@@ -219,7 +219,7 @@ func (w *Wrapper) handleResult(val []reflect.Value, err error) contract.Response
 }
 
 func NewRouteHandlerFromHttp(h http.Handler) RouteHandler {
-	return func(req contract.RequestContract) contract.ResponseContract {
+	return func(req contracts.RequestContract) contracts.ResponseContract {
 		if request, ok := req.(*content.NetHttpRequest); ok {
 			return NetHttpHandlerFromHttp(request, h)
 		} else if request, ok := req.(*content.FastHttpRequest); ok {
@@ -230,21 +230,14 @@ func NewRouteHandlerFromHttp(h http.Handler) RouteHandler {
 	}
 }
 
-func (w *Wrapper) getRuntimeApp(req contract.RequestContract) *kernel.Application {
+func (w *Wrapper) getRuntimeApp(req contracts.RequestContract) *kernel.Application {
 	runtime := w.app.NewRuntime()
 	w.requestResolver.ResolveRequest(req, runtime)
-
-	for _, v := range w.app.RuntimeRegisters() {
-		runtime.Bind(v.Abs(), v.Instance(), v.Singleton())
-	}
-
-	runtime.RegisterSingleton(w.app)
-	runtime.Singleton(&kernel.Application{}, runtime)
 
 	return runtime
 }
 
-func convertResponse(data interface{}) contract.ResponseContract {
+func convertResponse(data interface{}) contracts.ResponseContract {
 
 	if t, ok := data.(error); ok { // return error
 		return content.ErrResponseFromError(t, 500, nil)
@@ -254,7 +247,7 @@ func convertResponse(data interface{}) contract.ResponseContract {
 		return content.NewResponse(t, map[string]string{}, 200)
 	} else if t, ok := data.(*content.ErrorResponse); ok { // return ErrorResponse
 		return t
-	} else if t, ok := data.(contract.ResponseContract); ok { // return Response
+	} else if t, ok := data.(contracts.ResponseContract); ok { // return Response
 		return t
 	} else if t, ok := data.(json.Marshaler); ok { // return json or error
 		j, err := t.MarshalJSON()
@@ -288,7 +281,7 @@ func NewWrapper(app *kernel.Application) *Wrapper {
 type defaultRequestResolver struct {
 }
 
-func (d defaultRequestResolver) ResolveRequest(r contract.RequestContract, runtime *kernel.Application) {
+func (d defaultRequestResolver) ResolveRequest(r contracts.RequestContract, runtime *kernel.Application) {
 	runtime.RegisterSingleton(r)
-	runtime.Singleton("contract.RequestContract", r)
+	runtime.Singleton("contracts.RequestContract", r)
 }

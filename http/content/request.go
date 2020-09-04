@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/buger/jsonparser"
 	"github.com/enorith/framework/contracts"
-	"github.com/enorith/framework/http/contract"
+	. "github.com/enorith/framework/http/contracts"
 	"strconv"
 )
 
@@ -61,8 +61,8 @@ func (shr *simpleParamRequest) SetUser(u contracts.User) {
 	shr.user = u
 }
 
-func GetJsonValue(r contract.RequestContract, key string) []byte {
-	if r.ExceptsJson() {
+func GetJsonValue(r RequestContract, key string) []byte {
+	if r.RequestWithJson() {
 		val, _, _, _ := jsonparser.Get(r.GetContent(), key)
 
 		return val
@@ -72,5 +72,5 @@ func GetJsonValue(r contract.RequestContract, key string) []byte {
 }
 
 type Request struct {
-	contract.RequestContract
+	RequestContract
 }

@@ -3,7 +3,7 @@ package router
 import (
 	"bufio"
 	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"github.com/valyala/fasthttp"
 	"io"
 	"net"
@@ -66,7 +66,7 @@ func (w *netHTTPResponseWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func FastHttpHandlerFromHttp(req *content.FastHttpRequest, h http.Handler) contract.ResponseContract {
+func FastHttpHandlerFromHttp(req *content.FastHttpRequest, h http.Handler) contracts.ResponseContract {
 	ctx := req.Origin()
 	var r http.Request
 	body := ctx.PostBody()

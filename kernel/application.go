@@ -17,6 +17,8 @@ var (
 
 type Cb func()
 
+type RuntimeHolder func(runtime *Application)
+
 type ServiceProvider interface {
 	// Register your service provider when app starting
 	//
@@ -46,13 +48,14 @@ func (r *RuntimeRegisters) Abs() interface{} {
 
 type Application struct {
 	container.Container
-	providers  []ServiceProvider
-	debug      bool
-	env        string
-	basePath   string
-	runtime    []*RuntimeRegisters
-	terminates []Cb
-	defers     []Cb
+	providers      []ServiceProvider
+	debug          bool
+	env            string
+	basePath       string
+	runtime        []*RuntimeRegisters
+	terminates     []Cb
+	defers         []Cb
+	runtimeHolders []RuntimeHolder
 }
 
 func (a *Application) RuntimeRegisters() []*RuntimeRegisters {
@@ -153,13 +156,32 @@ func (a *Application) Configure(name string, to interface{}) error {
 }
 
 func (a *Application) NewRuntime() *Application {
-	return NewApp(a.Env(), a.Debug(), a.GetBasePath())
+
+	runtime := NewApp(a.Env(), a.Debug(), a.GetBasePath())
+
+	for _, v := range a.RuntimeRegisters() {
+		runtime.Bind(v.Abs(), v.Instance(), v.Singleton())
+	}
+
+	runtime.RegisterSingleton(a)
+	runtime.Singleton(&Application{}, runtime)
+	for _, v := range a.runtimeHolders {
+		v(runtime)
+	}
+
+	return runtime
+}
+
+//ConfigRuntime handle runtime app before its returns
+func (a *Application) ConfigRuntime(h RuntimeHolder) {
+	a.runtimeHolders = append(a.runtimeHolders, h)
 }
 
 func NewApp(env string, debug bool, basePath string) *Application {
 	app := &Application{}
 	app.Init()
 	app.providers = []ServiceProvider{}
+	app.runtimeHolders = []RuntimeHolder{}
 	app.env = env
 	app.debug = debug
 	app.runtime = []*RuntimeRegisters{}

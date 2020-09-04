@@ -7,7 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/enorith/framework/contracts"
-	"github.com/enorith/framework/http/contract"
+	. "github.com/enorith/framework/http/contracts"
+	"github.com/enorith/supports/byt"
 	b "github.com/enorith/supports/byt"
 	"github.com/valyala/fasthttp"
 	"strconv"
@@ -46,6 +47,10 @@ func (r *FastHttpRequest) ExceptsJson() bool {
 	return b.Contains(r.Accepts(), []byte("/json"), []byte("+json"))
 }
 
+func (r *FastHttpRequest) RequestWithJson() bool {
+	return byt.Contains(r.Header("Content-Type"), []byte("application/json"))
+}
+
 func (r *FastHttpRequest) Accepts() []byte {
 	return r.origin.Request.Header.Peek("Accept")
 }
@@ -54,6 +59,14 @@ func (r *FastHttpRequest) GetClientIp() string {
 	return r.origin.RemoteIP().String()
 }
 
+func (r *FastHttpRequest) File(key string) (UploadFile, error) {
+	h, err := r.origin.FormFile(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &uploadFile{header: h}, nil
+}
 func (r *FastHttpRequest) Get(key string) []byte {
 	query := r.origin.QueryArgs()
 	if query.Has(key) {
@@ -134,13 +147,13 @@ func (r *FastHttpRequest) HeaderString(key string) string {
 	return string(r.Header(key))
 }
 
-func (r *FastHttpRequest) SetHeader(key string, value []byte) contract.RequestContract {
+func (r *FastHttpRequest) SetHeader(key string, value []byte) RequestContract {
 	r.Origin().Request.Header.SetBytesV(key, value)
 
 	return r
 }
 
-func (r *FastHttpRequest) SetHeaderString(key, value string) contract.RequestContract {
+func (r *FastHttpRequest) SetHeaderString(key, value string) RequestContract {
 	r.Origin().Request.Header.Set(key, value)
 
 	return r

@@ -6,7 +6,7 @@ import (
 	"github.com/enorith/framework/container"
 	"github.com/enorith/framework/exception"
 	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"github.com/enorith/framework/http/errors"
 	"github.com/enorith/framework/http/router"
 	"github.com/enorith/framework/kernel"
@@ -26,7 +26,7 @@ const (
 
 //RequestMiddleware request middleware
 type RequestMiddleware interface {
-	Handle(r contract.RequestContract, next PipeHandler) contract.ResponseContract
+	Handle(r contracts.RequestContract, next PipeHandler) contracts.ResponseContract
 }
 
 type MiddlewareGroup map[string][]RequestMiddleware
@@ -36,22 +36,23 @@ func timeMic() int64 {
 }
 
 type Kernel struct {
-	wrapper         *router.Wrapper
-	middleware      []RequestMiddleware
-	middlewareGroup map[string][]RequestMiddleware
-	app             *kernel.Application
-	errorHandler    errors.ErrorHandler
-	tcpKeepAlive    bool
-	RequestCurrency int
-	OutputLog       bool
-	Handler         handlerType
+	wrapper            *router.Wrapper
+	middleware         []RequestMiddleware
+	middlewareGroup    map[string][]RequestMiddleware
+	app                *kernel.Application
+	errorHandler       errors.ErrorHandler
+	tcpKeepAlive       bool
+	RequestCurrency    int
+	MaxRequestBodySize int
+	OutputLog          bool
+	Handler            handlerType
 }
 
 func (k *Kernel) Wrapper() *router.Wrapper {
 	return k.wrapper
 }
 
-func (k *Kernel) handleFunc(f func() (request contract.RequestContract, code int)) {
+func (k *Kernel) handleFunc(f func() (request contracts.RequestContract, code int)) {
 	defer k.app.Terminate()
 	var start int64
 	if k.OutputLog {
@@ -62,14 +63,15 @@ func (k *Kernel) handleFunc(f func() (request contract.RequestContract, code int
 	if k.OutputLog {
 		end := timeMic()
 
+		body := bytes.Join(bytes.Fields(request.GetContent()), []byte(""))
 		log.Printf("/ %s - [%s] %s '%s' (%d) <%.3fms>", request.GetClientIp(),
-			request.GetMethod(), request.GetUri(), request.GetContent(), code, float64(end-start)/1000)
+			request.GetMethod(), request.GetUri(), body, code, float64(end-start)/1000)
 	}
 }
 
 func (k *Kernel) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	k.handleFunc(func() (request contract.RequestContract, code int) {
+	k.handleFunc(func() (request contracts.RequestContract, code int) {
 		request = content.NewNetHttpRequest(r, w)
 		resp := k.Handle(request)
 
@@ -105,7 +107,7 @@ func (k *Kernel) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (k *Kernel) FastHttpHandler(ctx *fasthttp.RequestCtx) {
-	k.handleFunc(func() (request contract.RequestContract, code int) {
+	k.handleFunc(func() (request contracts.RequestContract, code int) {
 		request = content.NewFastHttpRequest(ctx)
 		resp := k.Handle(request)
 
@@ -161,7 +163,7 @@ func (k *Kernel) SetErrorHandler(handler errors.ErrorHandler) {
 	k.errorHandler = handler
 }
 
-func (k *Kernel) Handle(r contract.RequestContract) (resp contract.ResponseContract) {
+func (k *Kernel) Handle(r contracts.RequestContract) (resp contracts.ResponseContract) {
 	defer func() {
 		if x := recover(); x != nil {
 			resp = k.errorHandler.HandleError(x, r)
@@ -181,7 +183,7 @@ func (k *Kernel) Handle(r contract.RequestContract) (resp contract.ResponseContr
 	return resp
 }
 
-func (k *Kernel) SendRequestToRouter(r contract.RequestContract) contract.ResponseContract {
+func (k *Kernel) SendRequestToRouter(r contracts.RequestContract) contracts.ResponseContract {
 	pipe := new(Pipeline)
 	pipe.Send(r)
 	for _, m := range k.middleware {
@@ -201,7 +203,7 @@ func (k *Kernel) SendRequestToRouter(r contract.RequestContract) contract.Respon
 		}
 	}
 
-	return pipe.Then(func(r contract.RequestContract) contract.ResponseContract {
+	return pipe.Then(func(r contracts.RequestContract) contracts.ResponseContract {
 		//resp := k.wrapper.Dispatch(r)
 		return p.Handler()(r)
 	})
@@ -222,14 +224,19 @@ func NewKernel(app *kernel.Application) *Kernel {
 type KernelRequestResolver struct {
 }
 
-func (rr KernelRequestResolver) ResolveRequest(r contract.RequestContract, runtime *kernel.Application) {
+func (rr KernelRequestResolver) ResolveRequest(r contracts.RequestContract, runtime *kernel.Application) {
 	runtime.RegisterSingleton(r)
-	runtime.Singleton("contract.RequestContract", r)
+	runtime.Singleton("contracts.RequestContract", r)
 
 	runtime.BindFunc(&content.Request{}, func(c *container.Container) reflect.Value {
 
 		return reflect.ValueOf(&content.Request{RequestContract: r})
 	}, false)
 
-	runtime.HandleInitialize(RequestInitializer{runtime: runtime})
+	runtime.BindFunc(content.Request{}, func(c *container.Container) reflect.Value {
+
+		return reflect.ValueOf(content.Request{RequestContract: r})
+	}, false)
+
+	runtime.HandleInitialize(RequestInjector{runtime: runtime, request: r})
 }

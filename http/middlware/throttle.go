@@ -7,7 +7,7 @@ import (
 	"github.com/enorith/framework/exception"
 	"github.com/enorith/framework/http"
 	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"time"
 )
 
@@ -17,7 +17,7 @@ type ThrottleRequests struct {
 	max     int
 }
 
-func (t *ThrottleRequests) Handle(r contract.RequestContract, next http.PipeHandler) contract.ResponseContract {
+func (t *ThrottleRequests) Handle(r contracts.RequestContract, next http.PipeHandler) contracts.ResponseContract {
 	if t.limiter.cache == nil {
 		t.limiter.cache = cache.AppCache
 	}
@@ -37,11 +37,11 @@ func (t *ThrottleRequests) Handle(r contract.RequestContract, next http.PipeHand
 	return resp
 }
 
-func (t *ThrottleRequests) requestSignature(r contract.RequestContract) string {
+func (t *ThrottleRequests) requestSignature(r contracts.RequestContract) string {
 	return fmt.Sprintf("request:hit:%x", r.GetSignature())
 }
 
-func (t *ThrottleRequests) responseTooManyAttempts(r contract.RequestContract) contract.ResponseContract {
+func (t *ThrottleRequests) responseTooManyAttempts(r contracts.RequestContract) contracts.ResponseContract {
 	e := exception.NewHttpException("too many attempts", 429, 429, nil)
 	return content.ErrResponse(e, 429, nil)
 }

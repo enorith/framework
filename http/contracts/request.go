@@ -1,8 +1,9 @@
-package contract
+package contracts
 
 import (
 	"context"
 	"github.com/enorith/framework/contracts"
+	"mime/multipart"
 )
 
 //RequestContract is interface of http request
@@ -16,11 +17,13 @@ type RequestContract interface {
 	SetParams(params map[string]string)
 	Accepts() []byte
 	ExceptsJson() bool
+	RequestWithJson() bool
 	IsXmlHttpRequest() bool
 	GetMethod() string
 	GetPathBytes() []byte
 	GetUri() []byte
 	Get(key string) []byte
+	File(key string) (UploadFile, error)
 	GetInt64(key string) (int64, error)
 	GetUint64(key string) (uint64, error)
 	GetString(key string) string
@@ -37,4 +40,11 @@ type RequestContract interface {
 	BearerToken() ([]byte, error)
 	User() contracts.User
 	SetUser(u contracts.User)
+}
+
+type UploadFile interface {
+	Save(dist string) error
+	Open() (multipart.File, error)
+	Close() error
+	Filename() string
 }

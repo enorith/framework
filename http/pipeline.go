@@ -1,21 +1,21 @@
 package http
 
-import "github.com/enorith/framework/http/contract"
+import "github.com/enorith/framework/http/contracts"
 
 //PipeHandler destination handler
-type PipeHandler func(r contract.RequestContract) contract.ResponseContract
+type PipeHandler func(r contracts.RequestContract) contracts.ResponseContract
 
 //PipeFunc request middleware function
-type PipeFunc func(r contract.RequestContract, next PipeHandler) contract.ResponseContract
+type PipeFunc func(r contracts.RequestContract, next PipeHandler) contracts.ResponseContract
 
 //Pipeline is request pipeline prepare for request middleware
 type Pipeline struct {
 	pipes []PipeFunc
-	r     contract.RequestContract
+	r     contracts.RequestContract
 }
 
 //Send request to pipeline
-func (p *Pipeline) Send(r contract.RequestContract) *Pipeline {
+func (p *Pipeline) Send(r contracts.RequestContract) *Pipeline {
 	p.r = r
 	return p
 }
@@ -43,9 +43,9 @@ func (p *Pipeline) ThroughMiddleware(pipe RequestMiddleware) *Pipeline {
 }
 
 //Then final destination
-func (p *Pipeline) Then(handler PipeHandler) contract.ResponseContract {
+func (p *Pipeline) Then(handler PipeHandler) contracts.ResponseContract {
 
-	return func(r contract.RequestContract) contract.ResponseContract {
+	return func(r contracts.RequestContract) contracts.ResponseContract {
 		if p.pipes != nil && len(p.pipes) > 0 {
 			next := p.prepareNext(0, handler)
 			return p.pipes[0](r, next)
@@ -60,7 +60,7 @@ func (p *Pipeline) prepareNext(now int, handler PipeHandler) PipeHandler {
 	if now+1 >= l {
 		next = handler
 	} else {
-		next = func(r contract.RequestContract) contract.ResponseContract {
+		next = func(r contracts.RequestContract) contracts.ResponseContract {
 			return p.pipes[now+1](r, p.prepareNext(now+1, handler))
 		}
 	}
@@ -75,12 +75,12 @@ func (p *Pipeline) preparePipe(pipe interface{}) PipeFunc {
 	}
 
 	if t, ok := pipe.(RequestMiddleware); ok {
-		return func(r contract.RequestContract, next PipeHandler) contract.ResponseContract {
+		return func(r contracts.RequestContract, next PipeHandler) contracts.ResponseContract {
 			return t.Handle(r, next)
 		}
 	}
 
-	return func(r contract.RequestContract, next PipeHandler) contract.ResponseContract {
+	return func(r contracts.RequestContract, next PipeHandler) contracts.ResponseContract {
 		return next(r)
 	}
 }

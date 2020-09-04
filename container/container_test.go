@@ -2,6 +2,7 @@ package container_test
 
 import (
 	"fmt"
+	"github.com/enorith/supports/reflection"
 	"reflect"
 	"testing"
 
@@ -103,7 +104,7 @@ func TestTypeString(t *testing.T) {
 
 	for _, v := range tt {
 		t.Run(v.name, func(t *testing.T) {
-			str := container.TypeString(v.abs)
+			str := reflection.TypeString(v.abs)
 
 			if str != v.str {
 				t.Fatalf("type if %v expect string [%s], got [%s]", v.abs, v.str, str)
@@ -132,14 +133,14 @@ func TestContainer_InstanceFor(t *testing.T) {
 type InitializeHandler struct {
 }
 
-func (i InitializeHandler) Initialize(abs interface{}, last reflect.Value) reflect.Value {
+func (i InitializeHandler) Injection(abs interface{}, last reflect.Value) reflect.Value {
 
 	return reflect.ValueOf(foo{"test foo"})
 }
 
 func (i InitializeHandler) When(abs interface{}) bool {
 
-	str := container.TypeString(abs)
+	str := reflection.TypeString(abs)
 
 	fmt.Println(str)
 

@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 	"strings"
 )
 
@@ -27,7 +27,7 @@ var methodMap = map[int]string{
 }
 
 //RouteHandler normal route handler
-type RouteHandler func(r contract.RequestContract) contract.ResponseContract
+type RouteHandler func(r contracts.RequestContract) contracts.ResponseContract
 
 type pathPartial [2]string
 
@@ -172,7 +172,7 @@ func resolvePartials(path string) []pathPartial {
 	return partials
 }
 
-func (r *router) Match(req contract.RequestContract) *paramRoute {
+func (r *router) Match(req contracts.RequestContract) *paramRoute {
 	sm := req.GetMethod()
 	sp := string(r.normalPath(req.GetPathBytes()))
 

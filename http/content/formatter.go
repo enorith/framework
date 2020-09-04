@@ -3,12 +3,12 @@ package content
 import (
 	"fmt"
 	"github.com/enorith/framework/exception"
-	"github.com/enorith/framework/http/contract"
+	"github.com/enorith/framework/http/contracts"
 )
 
-type ErrorResponseFormatter func(err exception.Exception, code int, debug bool, headers map[string]string) contract.ResponseContract
+type ErrorResponseFormatter func(err exception.Exception, code int, debug bool, headers map[string]string) contracts.ResponseContract
 
-func JsonErrorResponseFormatter(err exception.Exception, code int, debug bool, headers map[string]string) contract.ResponseContract {
+func JsonErrorResponseFormatter(err exception.Exception, code int, debug bool, headers map[string]string) contracts.ResponseContract {
 
 	data := map[string]interface{}{
 		"code":    err.Code(),
@@ -31,7 +31,7 @@ func JsonErrorResponseFormatter(err exception.Exception, code int, debug bool, h
 	return JsonResponse(data, code, headers)
 }
 
-func HtmlErrorResponseFormatter(err exception.Exception, code int, debug bool, headers map[string]string) contract.ResponseContract {
+func HtmlErrorResponseFormatter(err exception.Exception, code int, debug bool, headers map[string]string) contracts.ResponseContract {
 	html := `
 <!DOCTYPE html>
 <html>
