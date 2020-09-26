@@ -34,7 +34,7 @@ func (s *ServiceProvider) Register(app *kernel.Application) {
 	}, false)
 
 	app.ConfigRuntime(func(runtime *kernel.Application) {
-
+		runtime.HandleInitialize(Injector{runtime: runtime})
 	})
 }
 
@@ -47,6 +47,7 @@ func (s *ServiceProvider) initDB(app *kernel.Application) {
 	app.Configure("database", &s.config)
 	DB = database.NewConnection(s.config.Default, s.config)
 	rithythm.Config(s.config)
+	orm.Config(s.config)
 }
 
 func NewProvider() *ServiceProvider {
@@ -55,18 +56,4 @@ func NewProvider() *ServiceProvider {
 
 func NewDefaultBuilder() *database.QueryBuilder {
 	return database.NewBuilder(DB.Clone())
-}
-
-type ModelInjector struct {
-	builder *orm.Builder
-}
-
-func (m ModelInjector) Injection(abs interface{}, last reflect.Value) reflect.Value {
-
-	panic("implement me")
-}
-
-func (m ModelInjector) When(abs interface{}) bool {
-
-	return false
 }
