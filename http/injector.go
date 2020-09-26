@@ -6,6 +6,7 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/enorith/framework/http/content"
 	"github.com/enorith/framework/http/contracts"
+	"github.com/enorith/framework/http/validation"
 	"github.com/enorith/framework/kernel"
 	"github.com/enorith/supports/byt"
 	"reflect"
@@ -66,8 +67,9 @@ func (c *cacheStruct) set(abs interface{}, b bool) {
 }
 
 type RequestInjector struct {
-	runtime *kernel.Application
-	request contracts.RequestContract
+	runtime   *kernel.Application
+	request   contracts.RequestContract
+	validator *validation.Validator
 }
 
 func (r RequestInjector) SetRuntime(runtime *kernel.Application) {
@@ -97,7 +99,7 @@ func (r RequestInjector) Injection(abs interface{}, last reflect.Value) reflect.
 
 	value.Elem().Field(0).Set(instanceReq)
 
-	parseStruct(ts, value, r.request, 1)
+	r.parseStruct(ts, value, r.request, 1)
 
 	if t.Kind() == reflect.Struct {
 		return value.Elem()
@@ -135,19 +137,22 @@ func init() {
 	cs = cacheStruct{cache: map[interface{}]bool{}, mu: sync.RWMutex{}}
 }
 
-func parseStruct(structType reflect.Type, newValue reflect.Value, request input, offset int) reflect.Value {
+func (r RequestInjector) parseStruct(structType reflect.Type, newValue reflect.Value, request input, offset int) reflect.Value {
 
 	for i := offset; i < structType.NumField(); i++ {
 		f := structType.Field(i)
 		fieldValue := newValue.Elem().Field(i)
+		if validated, ok := newValue.Interface().(validation.WithValidation); ok {
+			validated.Rules()
+		}
 		if f.Type.Kind() == reflect.Struct && f.Anonymous {
-			value := parseStruct(f.Type, reflect.New(f.Type), request, 0)
+			value := r.parseStruct(f.Type, reflect.New(f.Type), request, 0)
 			fieldValue.Set(value.Elem())
 		} else {
 			if input := f.Tag.Get("input"); input != "" {
-				parseField(f.Type, fieldValue, request.Get(input))
+				r.parseField(f.Type, fieldValue, request.Get(input))
 			} else if param := f.Tag.Get("param"); param != "" {
-				parseField(f.Type, fieldValue, []byte(request.Param(param)))
+				r.parseField(f.Type, fieldValue, []byte(request.Param(param)))
 			} else if file := f.Tag.Get("file"); file != "" {
 				if f.Type.String() == "contracts.UploadFile" {
 					uploadFile, e := request.File(file)
@@ -162,10 +167,13 @@ func parseStruct(structType reflect.Type, newValue reflect.Value, request input,
 	return newValue
 }
 
-func parseField(fieldType reflect.Type, field reflect.Value, data []byte) {
+func (r RequestInjector) parseField(fieldType reflect.Type, field reflect.Value, data []byte) {
 	switch fieldType.Kind() {
 	case reflect.String:
 		field.SetString(byt.ToString(data))
+	case reflect.Bool:
+		in, _ := byt.ToBool(data)
+		field.SetBool(in)
 	case reflect.Int:
 		fallthrough
 	case reflect.Int32:
@@ -181,17 +189,17 @@ func parseField(fieldType reflect.Type, field reflect.Value, data []byte) {
 		in, _ := byt.ToUint64(data)
 		field.SetUint(in)
 	case reflect.Struct:
-		in := parseStruct(fieldType, reflect.New(fieldType), jsonInput(data), 0)
+		in := r.parseStruct(fieldType, reflect.New(fieldType), jsonInput(data), 0)
 		field.Set(in.Elem())
 	case reflect.Ptr:
-		in := parseStruct(fieldType, reflect.New(fieldType), jsonInput(data), 0)
+		in := r.parseStruct(fieldType, reflect.New(fieldType), jsonInput(data), 0)
 		field.Set(in)
 	case reflect.Slice:
 		it := fieldType.Elem()
 		var ivs []reflect.Value
 		jsonInput(data).Each(func(j jsonInput) {
 			iv := reflect.New(it).Elem()
-			parseField(it, iv, j)
+			r.parseField(it, iv, j)
 			ivs = append(ivs, iv)
 		})
 		l := len(ivs)

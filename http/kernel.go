@@ -9,6 +9,7 @@ import (
 	"github.com/enorith/framework/http/contracts"
 	"github.com/enorith/framework/http/errors"
 	"github.com/enorith/framework/http/router"
+	"github.com/enorith/framework/http/validation"
 	"github.com/enorith/framework/kernel"
 	"github.com/valyala/fasthttp"
 	"log"
@@ -238,5 +239,5 @@ func (rr KernelRequestResolver) ResolveRequest(r contracts.RequestContract, runt
 		return reflect.ValueOf(content.Request{RequestContract: r})
 	}, false)
 
-	runtime.HandleInitialize(RequestInjector{runtime: runtime, request: r})
+	runtime.HandleInitialize(RequestInjector{runtime: runtime, request: r, validator: validation.DefaultValidator})
 }
