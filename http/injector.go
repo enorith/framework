@@ -9,11 +9,20 @@ import (
 	"github.com/enorith/framework/http/validation"
 	"github.com/enorith/framework/kernel"
 	"github.com/enorith/supports/byt"
+	"github.com/enorith/supports/reflection"
 	"reflect"
 	"sync"
 )
 
 var cs cacheStruct
+
+var (
+	typeRequest,
+	typeParamInt64,
+	typeParamString,
+	typeParamInt,
+	typeParamUnit reflect.Type
+)
 
 type input interface {
 	Get(key string) []byte
@@ -67,45 +76,94 @@ func (c *cacheStruct) set(abs interface{}, b bool) {
 }
 
 type RequestInjector struct {
-	runtime   *kernel.Application
-	request   contracts.RequestContract
-	validator *validation.Validator
+	runtime    *kernel.Application
+	request    contracts.RequestContract
+	validator  *validation.Validator
+	paramIndex int
 }
 
-func (r RequestInjector) SetRuntime(runtime *kernel.Application) {
-	r.runtime = runtime
-}
-
-func (r RequestInjector) Injection(abs interface{}, last reflect.Value) reflect.Value {
+func (r RequestInjector) Injection(abs interface{}, last reflect.Value) (reflect.Value, error) {
 	var value reflect.Value
-	// dependency injection sub struct of content.Request
+	var e error
 	defer func() {
 		if x := recover(); x != nil {
 			value = reflect.Value{}
+			if err, ok := x.(error); ok {
+				e = err
+			}
 		}
 	}()
-
 	t := typeOf(abs)
-	ts, e := ofStruct(t)
+	ts := reflection.StructType(abs)
 
-	if e != nil {
-		return reflect.Value{}
+	//
+	if last.IsValid() {
+		value = last
+	} else {
+		value = reflect.New(ts)
 	}
 
-	value = reflect.New(ts)
+	//value = last
+	if r.isRequest(abs) {
+		// dependency injection sub struct of content.Request
 
-	req := ts.Field(0).Type
-	instanceReq := r.runtime.Instance(req)
+		for i := 0; i < ts.NumField(); i++ {
+			tf := ts.Field(i).Type
+			if reflection.StructType(tf) == typeRequest {
+				instanceReq, err := r.runtime.Instance(tf)
+				if err != nil {
+					return value, err
+				}
+				value.Elem().Field(i).Set(instanceReq)
+				break
+			}
+		}
 
-	value.Elem().Field(0).Set(instanceReq)
+		r.parseStruct(ts, value, r.request, 1)
 
-	r.parseStruct(ts, value, r.request, 1)
+		if t.Kind() == reflect.Struct {
+			return value.Elem(), nil
+		}
 
-	if t.Kind() == reflect.Struct {
-		return value.Elem()
+		return value, nil
+	} else if r.isParam(abs) {
+		// parameter injection
+		params := r.request.ParamsSlice()
+		paramsLength := len(params)
+		if paramsLength > r.paramIndex {
+			param := params[r.paramIndex]
+			if ts == typeParamInt64 || ts == typeParamInt {
+				val, err := byt.ToInt64(param)
+				if err != nil {
+
+					return value, err
+				}
+				value.Elem().SetInt(val)
+			} else if ts == typeParamUnit {
+
+				val, err := byt.ToUint64(param)
+				if err != nil {
+
+					return value, err
+				}
+				value.Elem().SetUint(val)
+			} else if ts == typeParamString {
+				val := byt.ToString(param)
+
+				value.Elem().SetString(val)
+			}
+
+			r.paramIndex++
+		}
+
+		if t.Kind() == reflect.Ptr {
+			return value, nil
+		}
+
+		return value.Elem(), nil
 	}
 
-	return value
+	return value, e
 }
 
 func (r RequestInjector) When(abs interface{}) bool {
@@ -115,21 +173,32 @@ func (r RequestInjector) When(abs interface{}) bool {
 	}
 
 	// dependency is sub struct of content.Request
-	is := r.isRequest(abs)
+	is := r.isParam(abs) || r.isRequest(abs)
 	cs.set(abs, is)
 
 	return is
 }
 
-func (r RequestInjector) isRequest(abs interface{}) bool {
-	ts, _ := ofStruct(typeOf(abs))
-	if ts.NumField() > 0 {
-		tp := ts.Field(0).Type.String()
+func (r RequestInjector) isParam(abs interface{}) bool {
+	ts := reflection.StructType(abs)
 
-		s := reflect.TypeOf(&content.Request{}).String()
-		ss := reflect.TypeOf(content.Request{}).String()
-		return ts.NumField() > 0 && (tp == s || ss == tp)
+	return ts == typeParamInt || ts == typeParamString || ts == typeParamInt64 || ts == typeParamUnit
+}
+
+func (r RequestInjector) isRequest(abs interface{}) bool {
+	ts := reflection.StructType(abs)
+
+	if ts.Kind() == reflect.Struct {
+		for i := 0; i < ts.NumField(); i++ {
+			if ts.Field(i).Anonymous {
+				t := reflection.StructType(ts.Field(i).Type)
+				if t == typeRequest {
+					return true
+				}
+			}
+		}
 	}
+
 	return false
 }
 
@@ -229,4 +298,12 @@ func typeOf(abs interface{}) (t reflect.Type) {
 		t = reflect.TypeOf(abs)
 	}
 	return
+}
+
+func init() {
+	typeParamInt64 = reflection.StructType(content.ParamInt64(42))
+	typeParamString = reflection.StructType(content.Param("42"))
+	typeParamUnit = reflection.StructType(content.ParamUint64(42))
+	typeParamInt = reflection.StructType(content.ParamInt(42))
+	typeRequest = reflection.StructType(content.Request{})
 }

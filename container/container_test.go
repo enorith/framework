@@ -36,7 +36,11 @@ func TestContainer_Instance(t *testing.T) {
 	for _, v := range bt {
 		t.Run(v.name, func(t *testing.T) {
 			c.Bind(v.abs, v.instance, v.singleton)
-			obj := c.Instance(v.abs)
+			obj, e := c.Instance(v.abs)
+
+			if e != nil {
+				t.Fatal(e)
+			}
 
 			if !obj.IsValid() {
 				t.Fatalf("instance of %v is invalid", v.abs)
@@ -133,9 +137,9 @@ func TestContainer_InstanceFor(t *testing.T) {
 type InitializeHandler struct {
 }
 
-func (i InitializeHandler) Injection(abs interface{}, last reflect.Value) reflect.Value {
+func (i InitializeHandler) Injection(abs interface{}, last reflect.Value) (reflect.Value, error) {
 
-	return reflect.ValueOf(foo{"test foo"})
+	return reflect.ValueOf(foo{"test foo"}), nil
 }
 
 func (i InitializeHandler) When(abs interface{}) bool {
@@ -150,9 +154,13 @@ func (i InitializeHandler) When(abs interface{}) bool {
 func TestContainer_HandleInitialize(t *testing.T) {
 	c := container.New()
 
-	c.HandleInitialize(InitializeHandler{})
+	c.WithInjector(InitializeHandler{})
 
-	i := c.Instance("container_test.foo")
+	i, e := c.Instance("container_test.foo")
+
+	if e != nil {
+		t.Fatal(e)
+	}
 	t.Log(i)
 	if !i.IsValid() {
 		t.Fatal("instance failed")

@@ -239,5 +239,5 @@ func (rr KernelRequestResolver) ResolveRequest(r contracts.RequestContract, runt
 		return reflect.ValueOf(content.Request{RequestContract: r})
 	}, false)
 
-	runtime.HandleInitialize(RequestInjector{runtime: runtime, request: r, validator: validation.DefaultValidator})
+	runtime.WithInjector(RequestInjector{runtime: runtime, request: r, validator: validation.DefaultValidator})
 }

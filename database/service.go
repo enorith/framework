@@ -34,7 +34,7 @@ func (s *ServiceProvider) Register(app *kernel.Application) {
 	}, false)
 
 	app.ConfigRuntime(func(runtime *kernel.Application) {
-		runtime.HandleInitialize(Injector{runtime: runtime})
+		runtime.WithInjector(Injector{runtime: runtime})
 	})
 }
 

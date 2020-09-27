@@ -11,44 +11,49 @@ type InstanceRegister func(c *Container) reflect.Value
 
 // Injector interface for conditional initializer
 type Injector interface {
-	Injection(abs interface{}, last reflect.Value) reflect.Value
+	Injection(abs interface{}, last reflect.Value) (reflect.Value, error)
 	When(abs interface{}) bool
 }
 
-// Initializer initializer function
-type Initializer func(abs interface{}, last reflect.Value) reflect.Value
+// InjectionFunc injection function
+type InjectionFunc func(abs interface{}, last reflect.Value) (reflect.Value, error)
 
-type initializerChain []Initializer
+type injectionChain []InjectionFunc
 
-// InitializerConditionFunc initializer conditional function
-type InitializerConditionFunc func(abs interface{}) bool
+// ConditionInjectionFunc  conditional injection function
+type ConditionInjectionFunc func(abs interface{}) bool
 
-func (ic initializerChain) do(abs interface{}) reflect.Value {
-	var va reflect.Value
+func (ic injectionChain) do(abs interface{}) (va reflect.Value, e error) {
+	ts := reflection.StructType(abs)
+	va = reflect.New(ts)
+
 	for _, v := range ic {
-		va = v(abs, va)
+		va, e = v(abs, va)
+		if e != nil {
+			return
+		}
 	}
 
-	return va
+	return
 }
 
-func conditionInitializer(requireAbs interface{}, i Initializer) Initializer {
+func conditionInjectionFunc(requireAbs interface{}, i InjectionFunc) InjectionFunc {
 
-	return func(abs interface{}, last reflect.Value) reflect.Value {
-		if f, ok := requireAbs.(InitializerConditionFunc); ok {
+	return func(abs interface{}, last reflect.Value) (reflect.Value, error) {
+		if f, ok := requireAbs.(ConditionInjectionFunc); ok {
 			if f(abs) {
 				return i(abs, last)
 			}
 		} else {
-			as := reflection.TypeString(abs)
-			rs := reflection.TypeString(requireAbs)
+			as := reflection.StructType(abs)
+			rs := reflection.StructType(requireAbs)
 
 			if as == rs {
 				return i(abs, last)
 			}
 		}
 
-		return reflect.Value{}
+		return last, nil
 	}
 }
 
@@ -59,26 +64,24 @@ type Container struct {
 
 	resolved map[string]reflect.Value
 
-	chain initializerChain
+	injectionChain injectionChain
 }
 
-func (c *Container) HandleInitialize(h Injector) *Container {
-	return c.InitializeWith(conditionInitializer(InitializerConditionFunc(h.When), h.Injection))
+func (c *Container) WithInjector(h Injector) *Container {
+	return c.InjectionWith(conditionInjectionFunc(ConditionInjectionFunc(h.When), h.Injection))
 }
 
-func (c *Container) InitializeWith(i Initializer) *Container {
-	c.chain = append(c.chain, i)
-
+func (c *Container) InjectionWith(i InjectionFunc) *Container {
+	c.injectionChain = append(c.injectionChain, i)
 	return c
 }
 
-func (c *Container) InitializeRequire(requireAbs interface{}, i Initializer) *Container {
-
-	return c.InitializeWith(conditionInitializer(requireAbs, i))
+func (c *Container) InjectionRequire(requireAbs interface{}, i InjectionFunc) *Container {
+	return c.InjectionWith(conditionInjectionFunc(requireAbs, i))
 }
 
-func (c *Container) InitializeCondition(f InitializerConditionFunc, i Initializer) *Container {
-	return c.InitializeWith(conditionInitializer(f, i))
+func (c *Container) InjectionCondition(f ConditionInjectionFunc, i InjectionFunc) *Container {
+	return c.InjectionWith(conditionInjectionFunc(f, i))
 }
 
 func (c *Container) Bind(abs, instance interface{}, singleton bool) {
@@ -119,7 +122,10 @@ func (c *Container) IsSingleton(abs interface{}) bool {
 }
 
 func (c *Container) MethodCall(abs interface{}, method string, params ...interface{}) ([]reflect.Value, error) {
-	instance := c.Instance(abs)
+	instance, e := c.Instance(abs)
+	if e != nil {
+		return nil, e
+	}
 
 	if !instance.IsValid() {
 		return nil, fmt.Errorf("invalid method for type %v method [%s]", reflect.TypeOf(abs), method)
@@ -148,10 +154,13 @@ func (c *Container) getResolver(instance interface{}) InstanceRegister {
 	return r
 }
 
-func (c *Container) Instance(abs interface{}, params ...interface{}) reflect.Value {
+func (c *Container) Instance(abs interface{}, params ...interface{}) (reflect.Value, error) {
 	var instance reflect.Value
+	var e error
 	fallback := func() {
-		va := c.chain.do(abs)
+		var va reflect.Value
+		va, e = c.injectionChain.do(abs)
+
 		if va.IsValid() {
 			instance = va
 		} else {
@@ -190,11 +199,14 @@ func (c *Container) Instance(abs interface{}, params ...interface{}) reflect.Val
 		}
 	}
 
-	return instance
+	return instance, e
 }
 
 func (c *Container) InstanceFor(abs interface{}, out interface{}, params ...interface{}) error {
-	v := c.Instance(abs)
+	v, e := c.Instance(abs)
+	if e != nil {
+		return e
+	}
 
 	o := reflect.ValueOf(out)
 
@@ -230,9 +242,13 @@ func (c *Container) Invoke(f interface{}, params ...interface{}) ([]reflect.Valu
 	var in = make([]reflect.Value, t.NumIn())
 	for i := 0; i < t.NumIn(); i++ {
 		argType := t.In(i)
-		param := c.Instance(argType)
+		param, e := c.Instance(argType)
+		if e != nil {
+			return nil, e
+		}
+
 		if !param.IsValid() {
-			return nil, fmt.Errorf("unable to inject %v, param %v invalid", t.String(), argType)
+			return nil, fmt.Errorf("inject %v failed, parameter [%d] of type %v is invalid", t.String(), i, argType)
 		}
 		in[i] = param
 	}

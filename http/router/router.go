@@ -1,6 +1,7 @@
 package router
 
 import (
+	"bytes"
 	"github.com/enorith/framework/http/contracts"
 	"strings"
 )
@@ -137,7 +138,7 @@ func (r *router) addRoute(method string, path string, handler RouteHandler) *par
 	router := &paramRoute{
 		path:    path,
 		handler: handler,
-		isParam: true,
+		isParam: false,
 		isValid: true,
 	}
 	r.routes[method] = append(r.routes[method], router)
@@ -172,40 +173,57 @@ func resolvePartials(path string) []pathPartial {
 	return partials
 }
 
-func (r *router) Match(req contracts.RequestContract) *paramRoute {
-	sm := req.GetMethod()
-	sp := string(r.normalPath(req.GetPathBytes()))
+func (r *router) Match(request contracts.RequestContract) *paramRoute {
+	// using bytes
+	return r.MatchBytes(request)
+}
 
-	for _, v := range r.routes[sm] {
-		if v.path == sp {
+func (r *router) MatchBytes(request contracts.RequestContract) *paramRoute {
+	method := request.GetMethod()
+	pathBytes := r.normalPath(request.GetPathBytes())
+
+	for _, v := range r.routes[method] {
+		/// full match
+		if bytes.Compare([]byte(v.path), pathBytes) == 0 {
 			return v
 		}
 	}
 
-	partials := strings.Split(sp, "/")
-	l := len(partials)
-	/// Match parameter route
-	for _, p := range r.routes[sm] {
+	/// /test/foo -> /test/:name
+
+	/// path bytes partials
+	/// {test, foo}
+	bytesPartials := bytes.Split(pathBytes, []byte("/"))
+
+	partialLength := len(bytesPartials)
+
+	for _, route := range r.routes[method] {
 		/// same amount of partials
-		if len(p.partials) == l {
-			params := map[string]string{}
+		/// route.partials -> {test, :name}
+		if len(route.partials) == partialLength {
+			params := map[string][]byte{}
+			var paramsSlice [][]byte
 			matches := 0
-			/// /test/foo => /test/:name
-			for k, part := range partials {
 
-				/// is parameter
-				pa := p.partials[k][0]
+			for index, part := range bytesPartials {
 
-				if p.partials[k][1] == "1" {
+				pa := route.partials[index][0]
+
+				if route.partials[index][1] == "1" {
+					/// is parameter route
+					/// pa = :name part=foo
 					params[pa[1:]] = part
+					paramsSlice = append(paramsSlice, part)
 					matches++
-				} else if pa == part {
+				} else if bytes.Compare([]byte(pa), part) == 0 {
+					/// pa = test part=test
 					matches++
 				}
 			}
-			if matches == l {
-				req.SetParams(params)
-				return p
+			if matches == partialLength {
+				request.SetParams(params)
+				request.SetParamsSlice(paramsSlice)
+				return route
 			}
 		}
 	}
@@ -215,6 +233,52 @@ func (r *router) Match(req contracts.RequestContract) *paramRoute {
 	}
 }
 
+///
+func (r *router) MatchString(request contracts.RequestContract) *paramRoute {
+
+	method := request.GetMethod()
+	sp := string(r.normalPath(request.GetPathBytes()))
+
+	for _, v := range r.routes[method] {
+		if v.path == sp {
+			return v
+		}
+	}
+
+	partials := strings.Split(sp, "/")
+	l := len(partials)
+	/// Match parameter route
+	for _, route := range r.routes[method] {
+		/// same amount of partials
+		if len(route.partials) == l {
+			params := map[string][]byte{}
+			matches := 0
+			/// /test/foo => /test/:name
+			for index, part := range partials {
+
+				/// is parameter
+				pa := route.partials[index][0]
+
+				if route.partials[index][1] == "1" {
+					params[pa[1:]] = []byte(part)
+					matches++
+				} else if pa == part {
+					matches++
+				}
+			}
+			if matches == l {
+				request.SetParams(params)
+				return route
+			}
+		}
+	}
+
+	return &paramRoute{
+		isValid: false,
+	}
+}
+
+// trim last "/"
 func (r *router) normalPath(path []byte) []byte {
 	l := len(path)
 

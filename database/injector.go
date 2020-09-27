@@ -7,42 +7,55 @@ import (
 	"reflect"
 )
 
+var (
+	typeModel reflect.Type
+)
+
 type Injector struct {
 	runtime *kernel.Application
 }
 
-func (i Injector) Injection(abs interface{}, last reflect.Value) reflect.Value {
+func (i Injector) Injection(abs interface{}, last reflect.Value) (reflect.Value, error) {
 	var value reflect.Value
 	var ts reflect.Type
 	// req := i.runtime.Instance("contracts.RequestContract").Interface().(contracts.RequestContract)
 
-	t := reflect.TypeOf(abs)
-	if t.Kind() == reflect.Ptr {
-		ts = t.Elem()
+	if last.IsValid() {
+		value = last
 	} else {
-		ts = t
+		value = reflect.New(ts)
 	}
+
+	t := reflection.TypeOf(abs)
+	ts = reflection.StructType(t)
 
 	value = reflect.New(ts)
 
 	if t.Kind() == reflect.Struct {
-		return value.Elem()
+		return value.Elem(), nil
 	}
 
-	return value
+	return value, nil
 }
 
 func (i Injector) When(abs interface{}) bool {
 
 	ts := reflection.StructType(abs)
 
-	if ts.NumField() > 0 {
-		tp := ts.Field(0).Type.String()
-
-		s := reflect.TypeOf(&orm.Model{}).String()
-		ss := reflect.TypeOf(orm.Model{}).String()
-		return ts.NumField() > 0 && (tp == s || ss == tp)
+	if ts.Kind() == reflect.Struct {
+		for i := 0; i < ts.NumField(); i++ {
+			if ts.Field(i).Anonymous {
+				t := reflection.StructType(ts.Field(i).Type)
+				if t == typeModel {
+					return true
+				}
+			}
+		}
 	}
 
 	return false
+}
+
+func init() {
+	typeModel = reflection.StructType(orm.Model{})
 }

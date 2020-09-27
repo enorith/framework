@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"errors"
-	"github.com/enorith/framework/contracts"
 	. "github.com/enorith/framework/http/contracts"
 	"github.com/enorith/supports/byt"
 	b "github.com/enorith/supports/byt"
@@ -15,11 +14,9 @@ import (
 )
 
 type FastHttpRequest struct {
-	simpleParamRequest
+	SimpleParamRequest
 	origin    *fasthttp.RequestCtx
-	params    map[string]string
 	signature []byte
-	user      contracts.User
 }
 
 func (r *FastHttpRequest) GetMethod() string {

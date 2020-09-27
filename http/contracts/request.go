@@ -9,12 +9,15 @@ import (
 //RequestContract is interface of http request
 type RequestContract interface {
 	Context() context.Context
-	Params() map[string]string
+	Params() map[string][]byte
 	Param(key string) string
 	ParamInt64(key string) (int64, error)
 	ParamUint64(key string) (uint64, error)
 	ParamInt(key string) (int, error)
-	SetParams(params map[string]string)
+	SetParams(params map[string][]byte)
+	SetParamsSlice(paramsSlice [][]byte)
+	ParamsSlice() [][]byte
+	ParamBytes(key string) []byte
 	Accepts() []byte
 	ExceptsJson() bool
 	RequestWithJson() bool

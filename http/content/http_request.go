@@ -16,7 +16,7 @@ import (
 )
 
 type NetHttpRequest struct {
-	simpleParamRequest
+	SimpleParamRequest
 	origin       *http.Request
 	originWriter http.ResponseWriter
 	params       map[string]string
