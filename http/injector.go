@@ -27,6 +27,7 @@ var (
 type input interface {
 	Get(key string) []byte
 	Param(key string) string
+	ParamBytes(key string) []byte
 	File(key string) (contracts.UploadFile, error)
 }
 
@@ -42,6 +43,10 @@ func (j jsonInput) Get(key string) []byte {
 
 func (j jsonInput) Param(key string) string {
 	return ""
+}
+
+func (j jsonInput) ParamBytes(key string) []byte {
+	return nil
 }
 
 func (j jsonInput) File(key string) (contracts.UploadFile, error) {
@@ -75,6 +80,7 @@ func (c *cacheStruct) set(abs interface{}, b bool) {
 	c.mu.Unlock()
 }
 
+//RequestInjector inject request object, with validation
 type RequestInjector struct {
 	runtime    *kernel.Application
 	request    contracts.RequestContract
@@ -221,7 +227,7 @@ func (r RequestInjector) parseStruct(structType reflect.Type, newValue reflect.V
 			if input := f.Tag.Get("input"); input != "" {
 				r.parseField(f.Type, fieldValue, request.Get(input))
 			} else if param := f.Tag.Get("param"); param != "" {
-				r.parseField(f.Type, fieldValue, []byte(request.Param(param)))
+				r.parseField(f.Type, fieldValue, request.ParamBytes(param))
 			} else if file := f.Tag.Get("file"); file != "" {
 				if f.Type.String() == "contracts.UploadFile" {
 					uploadFile, e := request.File(file)
@@ -237,6 +243,12 @@ func (r RequestInjector) parseStruct(structType reflect.Type, newValue reflect.V
 }
 
 func (r RequestInjector) parseField(fieldType reflect.Type, field reflect.Value, data []byte) {
+	v := field.Interface()
+	if _, ok := v.([]byte); ok {
+		field.SetBytes(data)
+		return
+	}
+
 	switch fieldType.Kind() {
 	case reflect.String:
 		field.SetString(byt.ToString(data))
@@ -257,6 +269,11 @@ func (r RequestInjector) parseField(fieldType reflect.Type, field reflect.Value,
 	case reflect.Uint64:
 		in, _ := byt.ToUint64(data)
 		field.SetUint(in)
+	case reflect.Float32:
+		fallthrough
+	case reflect.Float64:
+		in, _ := byt.ToFloat64(data)
+		field.SetFloat(in)
 	case reflect.Struct:
 		in := r.parseStruct(fieldType, reflect.New(fieldType), jsonInput(data), 0)
 		field.Set(in.Elem())
@@ -279,6 +296,8 @@ func (r RequestInjector) parseField(fieldType reflect.Type, field reflect.Value,
 
 		field.Set(slice)
 	}
+
+	return
 }
 
 func ofStruct(t reflect.Type) (reflect.Type, error) {

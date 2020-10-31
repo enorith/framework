@@ -55,7 +55,7 @@ func (v *Validator) GetRule(name string) (RuleRegister, bool) {
 	return r, ok
 }
 
-func (v Validator) Passes(req contracts.RequestContract, attribute string, input interface{}, rules []interface{}) (errors []string) {
+func (v *Validator) Passes(req contracts.RequestContract, attribute string, input interface{}, rules []interface{}) (errors []string) {
 	for _, rl := range rules {
 		if s, ok := rl.(string); ok {
 			ss := strings.Split(s, ":")
