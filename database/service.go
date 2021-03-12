@@ -2,12 +2,8 @@ package database
 
 import (
 	"github.com/enorith/database"
-	"github.com/enorith/database/orm"
-	"github.com/enorith/database/rithythm"
 	"github.com/enorith/framework/cache"
-	"github.com/enorith/framework/container"
 	"github.com/enorith/framework/kernel"
-	"reflect"
 )
 
 var (
@@ -22,16 +18,8 @@ type ServiceProvider struct {
 func (s *ServiceProvider) Register(app *kernel.Application) {
 	s.initDB(app)
 	app.Defer(func() {
-		for !database.Conns.Empty() {
-			database.Conns.ShiftAndClose()
-		}
+		database.DefaultManager.CloseAll()
 	})
-	app.BindRuntimeFunc(&database.QueryBuilder{}, func(c *container.Container) reflect.Value {
-		return reflect.ValueOf(NewDefaultBuilder())
-	}, false)
-	app.BindRuntimeFunc(&orm.Builder{}, func(c *container.Container) reflect.Value {
-		return reflect.ValueOf(&orm.Builder{QueryBuilder: NewDefaultBuilder()})
-	}, false)
 
 	app.ConfigRuntime(func(runtime *kernel.Application) {
 		runtime.WithInjector(Injector{runtime: runtime})
@@ -45,15 +33,8 @@ func (s *ServiceProvider) Boot(app *kernel.Application) {
 func (s *ServiceProvider) initDB(app *kernel.Application) {
 	database.WithDefaultDrivers()
 	app.Configure("database", &s.config)
-	DB = database.NewConnection(s.config.Default, s.config)
-	rithythm.Config(s.config)
-	orm.Config(s.config)
 }
 
 func NewProvider() *ServiceProvider {
 	return &ServiceProvider{}
-}
-
-func NewDefaultBuilder() *database.QueryBuilder {
-	return database.NewBuilder(DB.Clone())
 }

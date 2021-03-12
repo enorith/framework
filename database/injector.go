@@ -1,10 +1,11 @@
 package database
 
 import (
+	"reflect"
+
 	"github.com/enorith/database/orm"
 	"github.com/enorith/framework/kernel"
 	"github.com/enorith/supports/reflection"
-	"reflect"
 )
 
 var (
@@ -30,6 +31,7 @@ func (i Injector) Injection(abs interface{}, last reflect.Value) (reflect.Value,
 	ts = reflection.StructType(t)
 
 	value = reflect.New(ts)
+	value.CanSet()
 
 	if t.Kind() == reflect.Struct {
 		return value.Elem(), nil

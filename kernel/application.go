@@ -1,11 +1,16 @@
 package kernel
 
 import (
-	"github.com/enorith/framework/container"
-	"github.com/enorith/framework/kernel/config"
-	"github.com/enorith/supports/carbon"
+	"fmt"
+	"io/fs"
 	"path/filepath"
+	"reflect"
 	"time"
+
+	"github.com/enorith/config"
+	"github.com/enorith/container"
+	"github.com/enorith/supports/carbon"
+	"github.com/enorith/supports/reflection"
 )
 
 const Version = "0.0.1"
@@ -56,6 +61,7 @@ type Application struct {
 	terminates     []Cb
 	defers         []Cb
 	runtimeHolders []RuntimeHolder
+	assetFS        fs.FS
 }
 
 func (a *Application) RuntimeRegisters() []*RuntimeRegisters {
@@ -151,13 +157,23 @@ func (a *Application) GetBasePath() string {
 }
 
 func (a *Application) Configure(name string, to interface{}) error {
-	path := filepath.Join(a.GetConfigPath(), name+".yml")
-	return config.LoadTo(path, to)
+	path := fmt.Sprintf("config/%s.yml", name)
+	e := config.UnmarshalFS(a.assetFS, path, to)
+	if e == nil {
+		a.BindRuntimeFunc(to, func(c *container.Container) reflect.Value {
+			return reflect.ValueOf(to)
+		}, true)
+		a.BindRuntimeFunc(reflection.StructType(to), func(c *container.Container) reflect.Value {
+			return reflect.ValueOf(to).Elem()
+		}, true)
+	}
+	return e
+
 }
 
 func (a *Application) NewRuntime() *Application {
 
-	runtime := NewApp(a.Env(), a.Debug(), a.GetBasePath())
+	runtime := NewApp(a.Env(), a.Debug(), a.assetFS)
 
 	for _, v := range a.RuntimeRegisters() {
 		runtime.Bind(v.Abs(), v.Instance(), v.Singleton())
@@ -177,7 +193,7 @@ func (a *Application) ConfigRuntime(h RuntimeHolder) {
 	a.runtimeHolders = append(a.runtimeHolders, h)
 }
 
-func NewApp(env string, debug bool, basePath string) *Application {
+func NewApp(env string, debug bool, assetFS fs.FS) *Application {
 	app := &Application{}
 	app.Init()
 	app.providers = []ServiceProvider{}
@@ -186,6 +202,6 @@ func NewApp(env string, debug bool, basePath string) *Application {
 	app.debug = debug
 	app.runtime = []*RuntimeRegisters{}
 	app.terminates = []Cb{}
-	app.basePath = basePath
+	app.assetFS = assetFS
 	return app
 }

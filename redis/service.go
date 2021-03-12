@@ -2,22 +2,29 @@ package redis
 
 import (
 	"fmt"
-	env "github.com/enorith/environment"
+	"strings"
+
 	"github.com/enorith/framework/kernel"
 	rds "github.com/go-redis/redis"
-	"strings"
 )
 
 var appRedis rds.Cmdable
 
 var GetClient func() rds.Cmdable
 
+type RedisConfig struct {
+	Hosts string `yaml:"hosts" default:"127.0.0.1:6379"`
+	DB    int    `yaml:"database" default:"0"`
+}
+
 type ServiceProvider struct {
 }
 
 func (s *ServiceProvider) Register(app *kernel.Application) {
-	addresses := s.parseAddress(env.GetString("REDIS_HOSTS", ":6379"))
-	db := env.GetInt("REDIS_DATABASE", 0)
+	var rc RedisConfig
+	app.Configure("redis", &rc)
+	addresses := s.parseAddress(rc.Hosts)
+	db := rc.DB
 
 	GetClient = func() rds.Cmdable {
 		if appRedis != nil {
