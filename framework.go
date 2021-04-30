@@ -5,7 +5,6 @@ import (
 
 	env "github.com/enorith/environment"
 	"github.com/enorith/framework/cache"
-	"github.com/enorith/framework/database"
 	"github.com/enorith/framework/http"
 	"github.com/enorith/framework/http/router"
 	"github.com/enorith/framework/kernel"
@@ -38,7 +37,6 @@ func Bootstrap(structure StandardAppStructure) *kernel.Application {
 func registerDefaultProviders(app *kernel.Application) {
 	app.RegisterServiceProvider(&redis.ServiceProvider{})
 	app.RegisterServiceProvider(&cache.ServiceProvider{})
-	app.RegisterServiceProvider(&database.ServiceProvider{})
 }
 
 func registerCustomProviders(app *kernel.Application) {

@@ -193,6 +193,10 @@ func (a *Application) ConfigRuntime(h RuntimeHolder) {
 	a.runtimeHolders = append(a.runtimeHolders, h)
 }
 
+func (a *Application) AssetFS() fs.FS {
+	return a.assetFS
+}
+
 func NewApp(env string, debug bool, assetFS fs.FS) *Application {
 	app := &Application{}
 	app.Init()

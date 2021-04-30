@@ -1,57 +1,41 @@
 package language
 
 import (
-	"github.com/enorith/framework/kernel"
-	"github.com/enorith/framework/kernel/config"
-	"github.com/enorith/language"
-	"io/ioutil"
-	"log"
-	"path/filepath"
+	"io/fs"
 	"strings"
+
+	"github.com/enorith/config"
+	"github.com/enorith/framework/kernel"
+	"github.com/enorith/language"
 )
 
-type Service struct {
+type LangService struct {
 }
 
-func (s Service) Register(app *kernel.Application) {
-
-	base := filepath.Join(app.GetBasePath(), "lang")
-	fs, e := ioutil.ReadDir(base)
-
-	if e != nil {
-		log.Printf("unable load languages %s", e)
-	}
-
-	for _, f := range fs {
-		lang := f.Name()
-		langPath := filepath.Join(base, lang)
-		fss, e := ioutil.ReadDir(langPath)
-
-		if e != nil {
-			log.Printf("unable load languages %s path: %s", e, langPath)
-			continue
-		}
-
-		for _, ff := range fss {
-			filename := ff.Name()
-			if ff.IsDir() {
-				log.Printf("unable load languages %s path: %s", filename, langPath)
-				break
+func (s LangService) Register(app *kernel.Application) {
+	de, e := fs.ReadDir(app.AssetFS(), "lang")
+	if e == nil {
+		for _, d := range de {
+			lang := d.Name()
+			if d.IsDir() {
+				langPath := "lang/" + d.Name()
+				del, e := fs.ReadDir(app.AssetFS(), langPath)
+				if e == nil {
+					for _, langF := range del {
+						if !langF.IsDir() {
+							filename := langF.Name()
+							key := strings.Split(filename, ".")[0]
+							var data map[string]string
+							config.UnmarshalFS(app.AssetFS(), langPath+"/"+filename, &data)
+							language.Register(key, lang, data)
+						}
+					}
+				}
 			}
-			key := strings.Split(filename, ".")[0]
-			file := filepath.Join(langPath, filename)
-			var data map[string]string
-			e = config.LoadTo(file, &data)
-			if e != nil {
-				log.Printf("unable load languages %s file: %s", key, file)
-				break
-			}
-			language.Register(key, lang, data)
 		}
 	}
-
 }
 
-func (s Service) Boot(app *kernel.Application) {
+func (s LangService) Boot(app *kernel.Application) {
 
 }

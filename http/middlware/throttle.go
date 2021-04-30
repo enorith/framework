@@ -1,14 +1,16 @@
 package middlware
 
 import (
+	"encoding/hex"
 	"fmt"
-	gocache "github.com/enorith/cache"
-	"github.com/enorith/framework/cache"
-	"github.com/enorith/framework/exception"
-	"github.com/enorith/framework/http"
-	"github.com/enorith/framework/http/content"
-	"github.com/enorith/framework/http/contracts"
 	"time"
+
+	"github.com/enorith/cache"
+	"github.com/enorith/exception"
+	c "github.com/enorith/framework/cache"
+	"github.com/enorith/http"
+	"github.com/enorith/http/content"
+	"github.com/enorith/http/contracts"
 )
 
 type ThrottleRequests struct {
@@ -18,10 +20,6 @@ type ThrottleRequests struct {
 }
 
 func (t *ThrottleRequests) Handle(r contracts.RequestContract, next http.PipeHandler) contracts.ResponseContract {
-	if t.limiter.cache == nil {
-		t.limiter.cache = cache.AppCache
-	}
-
 	resp := next(r)
 	key := t.requestSignature(r)
 
@@ -38,7 +36,7 @@ func (t *ThrottleRequests) Handle(r contracts.RequestContract, next http.PipeHan
 }
 
 func (t *ThrottleRequests) requestSignature(r contracts.RequestContract) string {
-	return fmt.Sprintf("request:hit:%x", r.GetSignature())
+	return fmt.Sprintf("request:hit:%s", hex.EncodeToString(r.GetSignature()))
 }
 
 func (t *ThrottleRequests) responseTooManyAttempts(r contracts.RequestContract) contracts.ResponseContract {
@@ -47,7 +45,7 @@ func (t *ThrottleRequests) responseTooManyAttempts(r contracts.RequestContract) 
 }
 
 type Limiter struct {
-	cache gocache.Repository
+	cache cache.Repository
 }
 
 func (l *Limiter) Hit(key string, minutes int) int {
@@ -90,7 +88,9 @@ func (l *Limiter) ResetAttempts(key string) bool {
 
 func Throttle(minutes int, max int) *ThrottleRequests {
 	return &ThrottleRequests{
-		&Limiter{},
+		&Limiter{
+			cache: c.AppCache,
+		},
 		minutes,
 		max,
 	}
