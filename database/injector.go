@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/enorith/database/orm"
-	"github.com/enorith/framework/kernel"
+	"github.com/enorith/framework"
 	"github.com/enorith/supports/reflection"
 )
 
@@ -13,7 +13,7 @@ var (
 )
 
 type Injector struct {
-	runtime *kernel.Application
+	runtime *framework.Application
 }
 
 func (i Injector) Injection(abs interface{}, last reflect.Value) (reflect.Value, error) {

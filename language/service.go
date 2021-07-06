@@ -5,14 +5,19 @@ import (
 	"strings"
 
 	"github.com/enorith/config"
-	"github.com/enorith/framework/kernel"
+	"github.com/enorith/framework"
 	"github.com/enorith/language"
 )
 
 type LangService struct {
+	locale string
 }
 
-func (s LangService) Register(app *kernel.Application) {
+func (s *LangService) Register(app *framework.Application) {
+	if s.locale != "" {
+		language.DefaultLanguage = s.locale
+	}
+
 	de, e := fs.ReadDir(app.AssetFS(), "lang")
 	if e == nil {
 		for _, d := range de {
@@ -36,6 +41,19 @@ func (s LangService) Register(app *kernel.Application) {
 	}
 }
 
-func (s LangService) Boot(app *kernel.Application) {
+func (s *LangService) Boot(app *framework.Application) {
 
+}
+
+func NewService(locale ...string) *LangService {
+
+	var l string
+
+	if len(locale) > 0 {
+		l = locale[0]
+	}
+
+	return &LangService{
+		locale: l,
+	}
 }

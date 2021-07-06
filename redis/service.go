@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/enorith/framework/kernel"
+	"github.com/enorith/framework"
 	rds "github.com/go-redis/redis"
 )
 
@@ -20,7 +20,7 @@ type RedisConfig struct {
 type ServiceProvider struct {
 }
 
-func (s *ServiceProvider) Register(app *kernel.Application) {
+func (s *ServiceProvider) Register(app *framework.Application) {
 	var rc RedisConfig
 	app.Configure("redis", &rc)
 	addresses := s.parseAddress(rc.Hosts)
@@ -50,7 +50,7 @@ func (s *ServiceProvider) Register(app *kernel.Application) {
 	}
 }
 
-func (s *ServiceProvider) Boot(app *kernel.Application) {
+func (s *ServiceProvider) Boot(app *framework.Application) {
 
 }
 

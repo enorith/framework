@@ -6,7 +6,7 @@ import (
 
 	. "github.com/enorith/cache"
 	"github.com/enorith/container"
-	"github.com/enorith/framework/kernel"
+	"github.com/enorith/framework"
 	appRedis "github.com/enorith/framework/redis"
 	"github.com/go-redis/cache/v8"
 	gc "github.com/patrickmn/go-cache"
@@ -23,17 +23,17 @@ type ServiceProvider struct {
 	cc CacheConfig
 }
 
-func (s *ServiceProvider) Register(app *kernel.Application) {
+func (s *ServiceProvider) Register(app *framework.Application) {
 	app.Configure("cache", &s.cc)
 	KeyPrefix = s.cc.Prefix
 	s.registerDefaultDrivers()
 
-	app.BindRuntimeFunc(&Manager{}, func(c *container.Container) reflect.Value {
+	app.BindRuntimeFunc(&Manager{}, func(c container.Interface) reflect.Value {
 		return reflect.ValueOf(NewManager(s.cc.Driver))
 	}, true)
 }
 
-func (s *ServiceProvider) Boot(app *kernel.Application) {
+func (s *ServiceProvider) Boot(app *framework.Application) {
 	AppCache = NewManager(s.cc.Driver)
 }
 

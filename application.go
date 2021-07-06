@@ -1,4 +1,4 @@
-package kernel
+package framework
 
 import (
 	"fmt"
@@ -160,10 +160,10 @@ func (a *Application) Configure(name string, to interface{}) error {
 	path := fmt.Sprintf("config/%s.yml", name)
 	e := config.UnmarshalFS(a.assetFS, path, to)
 	if e == nil {
-		a.BindRuntimeFunc(to, func(c *container.Container) reflect.Value {
+		a.BindRuntimeFunc(to, func(c container.Interface) reflect.Value {
 			return reflect.ValueOf(to)
 		}, true)
-		a.BindRuntimeFunc(reflection.StructType(to), func(c *container.Container) reflect.Value {
+		a.BindRuntimeFunc(reflection.StructType(to), func(c container.Interface) reflect.Value {
 			return reflect.ValueOf(to).Elem()
 		}, true)
 	}
