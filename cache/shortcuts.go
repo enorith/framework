@@ -3,14 +3,14 @@ package cache
 import (
 	"time"
 
-	. "github.com/enorith/cache"
+	c "github.com/enorith/cache"
 )
 
 func Has(key string) bool {
 	return AppCache.Has(key)
 }
 
-func Get(key string, object interface{}) (Value, bool) {
+func Get(key string, object interface{}) (c.Value, bool) {
 	return AppCache.Get(key, object)
 }
 

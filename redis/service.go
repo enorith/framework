@@ -2,58 +2,58 @@ package redis
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
+	"github.com/enorith/container"
 	"github.com/enorith/framework"
-	rds "github.com/go-redis/redis"
+	"github.com/enorith/http/contracts"
+	rds "github.com/go-redis/redis/v8"
 )
 
-var appRedis rds.Cmdable
+var Client rds.Cmdable
 
-var GetClient func() rds.Cmdable
+var redisType = reflect.TypeOf((*rds.Cmdable)(nil)).Elem()
 
 type RedisConfig struct {
 	Hosts string `yaml:"hosts" default:"127.0.0.1:6379"`
 	DB    int    `yaml:"database" default:"0"`
 }
 
-type ServiceProvider struct {
+type Service struct {
 }
 
-func (s *ServiceProvider) Register(app *framework.Application) {
+func (s *Service) Register(app *framework.App) error {
 	var rc RedisConfig
 	app.Configure("redis", &rc)
 	addresses := s.parseAddress(rc.Hosts)
-	db := rc.DB
-
-	GetClient = func() rds.Cmdable {
-		if appRedis != nil {
-			return appRedis
+	if len(addresses) > 0 {
+		addrs := make(map[string]string)
+		for k, v := range addresses {
+			addrs[fmt.Sprintf("redis%d", k)] = v
 		}
-
-		if len(addresses) > 0 {
-			addrs := make(map[string]string)
-			for k, v := range addresses {
-				addrs[fmt.Sprintf("redis%d", k)] = v
-			}
-			appRedis = rds.NewRing(&rds.RingOptions{
-				Addrs: addrs,
-				DB:    db,
-			})
-		} else {
-			appRedis = rds.NewClient(&rds.Options{
-				Addr: addresses[0],
-				DB:   db,
-			})
-		}
-		return appRedis
+		Client = rds.NewRing(&rds.RingOptions{
+			Addrs: addrs,
+			DB:    rc.DB,
+		})
+	} else {
+		Client = rds.NewClient(&rds.Options{
+			Addr: addresses[0],
+			DB:   rc.DB,
+		})
 	}
+	return nil
 }
 
-func (s *ServiceProvider) Boot(app *framework.Application) {
-
+//Lifetime container callback
+// usually register request lifetime instance to IoC-Container (per-request unique)
+// this function will run before every request
+func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
+	ioc.BindFunc(redisType, func(c container.Interface) (reflect.Value, error) {
+		return reflect.ValueOf(Client), nil
+	}, true)
 }
 
-func (s *ServiceProvider) parseAddress(address string) []string {
+func (s *Service) parseAddress(address string) []string {
 	return strings.Split(address, ",")
 }

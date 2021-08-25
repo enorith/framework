@@ -5,47 +5,57 @@ import (
 	"strings"
 
 	"github.com/enorith/config"
+	"github.com/enorith/container"
 	"github.com/enorith/framework"
+	"github.com/enorith/http/contracts"
 	"github.com/enorith/language"
 )
 
+var Dir = "."
+
 type LangService struct {
 	locale string
+	fs     fs.FS
 }
 
-func (s *LangService) Register(app *framework.Application) {
+func (s *LangService) Register(app *framework.App) error {
 	if s.locale != "" {
 		language.DefaultLanguage = s.locale
 	}
 
-	de, e := fs.ReadDir(app.AssetFS(), "lang")
+	de, e := fs.ReadDir(s.fs, Dir)
 	if e == nil {
 		for _, d := range de {
 			lang := d.Name()
 			if d.IsDir() {
-				langPath := "lang/" + d.Name()
-				del, e := fs.ReadDir(app.AssetFS(), langPath)
-				if e == nil {
-					for _, langF := range del {
-						if !langF.IsDir() {
-							filename := langF.Name()
-							key := strings.Split(filename, ".")[0]
-							var data map[string]string
-							config.UnmarshalFS(app.AssetFS(), langPath+"/"+filename, &data)
-							language.Register(key, lang, data)
-						}
+				langPath := d.Name()
+				del, e := fs.ReadDir(s.fs, langPath)
+				if e != nil {
+					return e
+				}
+				for _, langF := range del {
+					if !langF.IsDir() {
+						filename := langF.Name()
+						key := strings.Split(filename, ".")[0]
+						var data map[string]string
+						config.UnmarshalFS(s.fs, langPath+"/"+filename, &data)
+						language.Register(key, lang, data)
 					}
 				}
 			}
 		}
 	}
+
+	return e
 }
 
-func (s *LangService) Boot(app *framework.Application) {
-
+//Lifetime container callback
+// usually register request lifetime instance to IoC-Container (per-request unique)
+// this function will run before every request
+func (s *LangService) Lifetime(ioc container.Interface, request contracts.RequestContract) {
 }
 
-func NewService(locale ...string) *LangService {
+func NewService(fs fs.FS, locale ...string) *LangService {
 
 	var l string
 
@@ -55,5 +65,6 @@ func NewService(locale ...string) *LangService {
 
 	return &LangService{
 		locale: l,
+		fs:     fs,
 	}
 }
