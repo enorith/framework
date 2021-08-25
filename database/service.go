@@ -18,7 +18,7 @@ type DriverRegister func(dsn string) gorm.Dialector
 var Migrator func(tx *gorm.DB)
 
 var (
-	driverRegisters map[string]DriverRegister
+	driverRegisters = make(map[string]DriverRegister)
 	mu              sync.RWMutex
 )
 
