@@ -15,6 +15,8 @@ import (
 
 type DriverRegister func(dsn string) gorm.Dialector
 
+var Migrator func(tx *gorm.DB)
+
 var (
 	driverRegisters map[string]DriverRegister
 	mu              sync.RWMutex
@@ -54,6 +56,11 @@ func (s *Service) Register(app *framework.App) error {
 			}
 			return gorm.Open(register(cc.DSN))
 		})
+	}
+	if Migrator != nil {
+		if tx, e := gormdb.DefaultManager.GetConnection(); e == nil {
+			Migrator(tx)
+		}
 	}
 
 	gormdb.DefaultManager.Using(config.Default)

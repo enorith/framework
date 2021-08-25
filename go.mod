@@ -1,6 +1,6 @@
 module github.com/enorith/framework
 
-go 1.13
+go 1.16
 
 require (
 	github.com/enorith/cache v0.0.3
