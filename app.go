@@ -2,11 +2,13 @@ package framework
 
 import (
 	"io/fs"
+	"time"
 
 	"github.com/enorith/config"
 	"github.com/enorith/container"
 	"github.com/enorith/http"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/supports/carbon"
 )
 
 //AppConfig: default app config name
@@ -17,8 +19,11 @@ var ConfigExt = ".yaml"
 
 //Config of application
 type Config struct {
-	Env   string `yaml:"env" env:"APP_ENV" default:"production"`
-	Debug bool   `yaml:"debug" env:"APP_DEBUG" default:"false"`
+	Env      string `yaml:"env" env:"APP_ENV" default:"production"`
+	Debug    bool   `yaml:"debug" env:"APP_DEBUG" default:"false"`
+	Locale   string `yaml:"locale" env:"APP_LOCALE" default:"en"`
+	Url      string `yaml:"url" env:"APP_URL" default:"http://localhost"`
+	Timezone string `yaml:"timezone" env:"APP_TIMEZONE" default:""`
 }
 
 //App: framework application
@@ -52,6 +57,12 @@ func (app *App) GetConfig() Config {
 //Bootstrap application, will call before app run
 func (app *App) Bootstrap() (*http.Server, error) {
 	app.Configure(AppConfig, &app.config)
+	if app.config.Timezone != "" {
+		loc, e := time.LoadLocation(app.config.Timezone)
+		if e == nil {
+			carbon.Timezone = loc
+		}
+	}
 
 	app.configService.Register(app)
 	for _, s := range app.services {

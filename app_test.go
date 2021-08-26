@@ -22,4 +22,5 @@ func TestBootstrap(t *testing.T) {
 		t.Log(app.GetConfig())
 		t.Fail()
 	}
+	t.Log(app.GetConfig())
 }
