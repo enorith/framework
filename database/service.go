@@ -57,13 +57,17 @@ func (s *Service) Register(app *framework.App) error {
 			return gorm.Open(register(cc.DSN))
 		})
 	}
+
+	gormdb.DefaultManager.Using(config.Default)
+
 	if Migrator != nil {
 		if tx, e := gormdb.DefaultManager.GetConnection(); e == nil {
 			Migrator(tx)
+		} else {
+			return e
 		}
 	}
 
-	gormdb.DefaultManager.Using(config.Default)
 	return nil
 }
 
