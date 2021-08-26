@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"reflect"
 	"sync"
 
 	"github.com/enorith/container"
@@ -10,13 +11,13 @@ import (
 
 type Service interface {
 	//Register service when app starting, before http server start
-	// you can configure service, initialize global vars etc.
+	// you can configure service, prepare global vars etc.
 	// running at main goroutine
 	Register(app *App) error
 
 	//Lifetime container callback
 	// usually register request lifetime instance to IoC-Container (per-request unique)
-	// this function will run before every request
+	// this function will run before every request handling
 	Lifetime(ioc container.Interface, request contracts.RequestContract)
 }
 
@@ -43,11 +44,17 @@ func (cs *ConfigService) Register(app *App) error {
 
 //Lifetime container callback
 // register config instance to request IoC-Container
-func (cs *ConfigService) Lifetime(container container.Interface, request contracts.RequestContract) {
+func (cs *ConfigService) Lifetime(ioc container.Interface, request contracts.RequestContract) {
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
 	for k, v := range cs.configs {
-		container.Singleton("config."+k, reflection.StructValue(v))
-		container.Singleton(reflection.StructType(v), reflection.StructValue(v))
+		sv := reflection.StructValue(v)
+		st := reflection.StructType(v)
+		resolver := func(c container.Interface) (reflect.Value, error) {
+			return sv, nil
+		}
+
+		ioc.BindFunc(st, resolver, true)
+		ioc.BindFunc("config."+k, resolver, true)
 	}
 }

@@ -24,7 +24,7 @@ type Service struct {
 	cc CacheConfig
 }
 
-func (s *Service) Register(app *framework.App) error {
+func (s Service) Register(app *framework.App) error {
 	app.Configure("cache", &s.cc)
 	c.KeyPrefix = s.cc.Prefix
 	s.registerDefaultDrivers()
@@ -35,13 +35,13 @@ func (s *Service) Register(app *framework.App) error {
 //Lifetime container callback
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
-func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
+func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
 	ioc.BindFunc(&c.Manager{}, func(c container.Interface) (reflect.Value, error) {
 		return reflect.ValueOf(AppCache), nil
 	}, true)
 }
 
-func (s *Service) registerDefaultDrivers() {
+func (s Service) registerDefaultDrivers() {
 	c.RegisterDriver("go_cache", func() c.Repository {
 		return c.NewGoCache(gc.New(c.DefaultExpiration, c.CleanupInterval))
 	})

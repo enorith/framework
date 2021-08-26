@@ -44,7 +44,7 @@ type Service struct {
 //Register service when app starting, before http server start
 // you can configure service, initialize global vars etc.
 // running at main goroutine
-func (s *Service) Register(app *framework.App) error {
+func (s Service) Register(app *framework.App) error {
 	var config Config
 	app.Configure("database", &config)
 
@@ -74,7 +74,7 @@ func (s *Service) Register(app *framework.App) error {
 //Lifetime container callback
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
-func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
+func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
 	ioc.BindFunc(&gorm.DB{}, func(c container.Interface) (reflect.Value, error) {
 		db, e := gormdb.DefaultManager.GetConnection()
 
