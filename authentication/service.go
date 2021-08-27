@@ -30,7 +30,7 @@ func (s *Service) withJWT(app *framework.App) {
 	var jwtConfig guards.JWTConfig
 	app.Configure("jwt", &jwtConfig)
 	AuthManager.RegisterDriver("jwt", func(up AuthProvider, r contracts.RequestContract) (authenticate.Guard, error) {
-		return jwt.NewJwtGuard(guards.TokenProvider{Request: r}, up, jwtConfig.Key), nil
+		return jwt.NewJwtGuard(guards.TokenProvider{Request: r}, up, []byte(jwtConfig.Key)), nil
 	})
 }
 

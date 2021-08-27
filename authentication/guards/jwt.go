@@ -3,7 +3,7 @@ package guards
 import "github.com/enorith/http/contracts"
 
 type JWTConfig struct {
-	Key []byte `yaml:"key" env:"AUTH_JWT_KEY"`
+	Key string `yaml:"key" env:"AUTH_JWT_KEY"`
 	TTL int    `yaml:"ttl" env:"AUTH_JWT_TTL"`
 }
 
