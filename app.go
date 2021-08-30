@@ -53,6 +53,14 @@ func (app *App) Configure(name string, value interface{}) *App {
 	return app
 }
 
+//ConfigureFS: load config from filesystem
+func (app *App) ConfigureFS(fs fs.FS, name string, value interface{}) *App {
+	config.UnmarshalFS(fs, name+ConfigExt, value)
+	app.configService.Add(name, value)
+
+	return app
+}
+
 //GetConfig: get app config instance
 func (app *App) GetConfig() Config {
 	return app.config

@@ -53,7 +53,19 @@ func (s Service) Register(app *framework.App) error {
 			if !ok {
 				return nil, fmt.Errorf("unregistered database driver [%s]", cc.Driver)
 			}
-			return gorm.Open(register(cc.DSN))
+			tx, e := gorm.Open(register(cc.DSN))
+			if e != nil {
+				return nil, e
+			}
+			db, e := tx.DB()
+			if e != nil {
+				return nil, e
+			}
+			db.SetMaxIdleConns(MaxIdelConns)
+			db.SetMaxOpenConns(MaxOpenConns)
+			db.SetConnMaxIdleTime(MaxIdleTime)
+			db.SetConnMaxLifetime(MaxLifeTime)
+			return tx, e
 		})
 	}
 

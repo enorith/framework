@@ -13,6 +13,7 @@ import (
 	"github.com/enorith/http"
 	"github.com/enorith/http/contracts"
 	"github.com/enorith/http/router"
+	"gorm.io/gorm"
 )
 
 type UserProvider struct {
@@ -43,8 +44,10 @@ func TestBootstrap(t *testing.T) {
 		t.Fail()
 	}
 	s.Serve(":8000", func(rw *router.Wrapper, k *http.Kernel) {
-		rw.Get("", func(ac authentication.Config) authentication.Config {
-			return ac
+		rw.Get("", func(tx *gorm.DB) map[string]interface{} {
+			us := make(map[string]interface{})
+			tx.Table("users").Find(&us)
+			return us
 		})
 
 		rw.Get("jwt", func(j authenticate.Guard) string {
