@@ -1,8 +1,7 @@
-# A framework for golang web artisan
+# A golang framework for web artisan.
 
-Working on it...
 
-# Components
+## Components
 
 * [enorith/http](https://github.com/enorith/http) http service kernel component
 * [enorith/container](https://github.com/enorith/container) IoC-Container
@@ -14,7 +13,8 @@ Working on it...
 * [enorith/language](https://github.com/enorith/language) language component
 
 ## TODO 
-- [ ] Authentication (component)
+- [x] Authentication (component incomplete)
 - [ ] Filesystem (component)
-- [ ] Database (component, using gorm for now)
+- [ ] Logging (component)
+- [ ] Database (component, using gorm for now, waiting generics) 
 - [ ] CLI application
