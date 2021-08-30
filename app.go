@@ -8,8 +8,11 @@ import (
 	"github.com/enorith/container"
 	"github.com/enorith/http"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/http/router"
 	"github.com/enorith/supports/carbon"
 )
+
+type RouterRegister func(rw *router.Wrapper)
 
 //AppConfig: default app config name
 var AppConfig = "app"
@@ -28,10 +31,11 @@ type Config struct {
 
 //App: framework application
 type App struct {
-	services      []Service
-	config        Config
-	configFs      fs.FS
-	configService *ConfigService
+	services        []Service
+	config          Config
+	configFs        fs.FS
+	configService   *ConfigService
+	routerRegisters []RouterRegister
 }
 
 //Register application service
@@ -89,16 +93,34 @@ func (app *App) Run(at string, register http.RouterRegister) error {
 		return e
 	}
 
-	server.Serve(at, register)
+	server.Serve(at, func(rw *router.Wrapper, k *http.Kernel) {
+		register(rw, k)
+		for _, rr := range app.routerRegisters {
+			rr(rw)
+		}
+	})
 	return nil
+}
+
+//GetEnv: get app env
+func (app *App) GetEnv() string {
+	return app.config.Env
+}
+
+//RegisterRoutes: register routes of http service
+func (app *App) RegisterRoutes(rr RouterRegister) *App {
+
+	app.routerRegisters = append(app.routerRegisters, rr)
+	return app
 }
 
 //NewApp: new application instance
 func NewApp(configFs fs.FS) *App {
 
 	return &App{
-		configFs:      configFs,
-		services:      make([]Service, 0),
-		configService: &ConfigService{configs: make(map[string]interface{})},
+		configFs:        configFs,
+		services:        make([]Service, 0),
+		configService:   &ConfigService{configs: make(map[string]interface{})},
+		routerRegisters: make([]RouterRegister, 0),
 	}
 }
