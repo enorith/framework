@@ -41,13 +41,8 @@ func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestCon
 	gc, ok := s.config.Guards[s.config.Default]
 
 	if ok {
-		guardResolver := func(c container.Interface) (reflect.Value, error) {
-			guard, e := AuthManager.GetGuard(gc.Driver, gc.Provider, request)
-			if e != nil {
-				return reflect.Value{}, e
-			}
-
-			return reflect.ValueOf(guard), e
+		guardResolver := func(c container.Interface) (interface{}, error) {
+			return AuthManager.GetGuard(gc.Driver, gc.Provider, request)
 		}
 		ioc.BindFunc("auth.guard", guardResolver, true)
 		ioc.BindFunc(GuardType, guardResolver, true)

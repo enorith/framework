@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"reflect"
 	"sync"
 
 	"github.com/enorith/container"
@@ -75,10 +74,9 @@ func (s Service) Register(app *framework.App) error {
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
 func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	ioc.BindFunc(&gorm.DB{}, func(c container.Interface) (reflect.Value, error) {
-		db, e := gormdb.DefaultManager.GetConnection()
+	ioc.BindFunc(&gorm.DB{}, func(c container.Interface) (interface{}, error) {
 
-		return reflect.ValueOf(db), e
+		return gormdb.DefaultManager.GetConnection()
 	}, false)
 }
 

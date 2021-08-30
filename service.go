@@ -1,7 +1,6 @@
 package framework
 
 import (
-	"reflect"
 	"sync"
 
 	"github.com/enorith/container"
@@ -50,7 +49,7 @@ func (cs *ConfigService) Lifetime(ioc container.Interface, request contracts.Req
 	for k, v := range cs.configs {
 		sv := reflection.StructValue(v)
 		st := reflection.StructType(v)
-		resolver := func(c container.Interface) (reflect.Value, error) {
+		resolver := func(c container.Interface) (interface{}, error) {
 			return sv, nil
 		}
 

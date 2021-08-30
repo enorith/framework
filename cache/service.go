@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"reflect"
 	"time"
 
 	c "github.com/enorith/cache"
@@ -36,8 +35,8 @@ func (s Service) Register(app *framework.App) error {
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
 func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	ioc.BindFunc(&c.Manager{}, func(c container.Interface) (reflect.Value, error) {
-		return reflect.ValueOf(AppCache), nil
+	ioc.BindFunc(&c.Manager{}, func(c container.Interface) (interface{}, error) {
+		return AppCache, nil
 	}, true)
 }
 
