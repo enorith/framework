@@ -36,6 +36,7 @@ type App struct {
 	configFs        fs.FS
 	configService   *ConfigService
 	routerRegisters []RouterRegister
+	defers          []func()
 }
 
 //Register application service
@@ -101,6 +102,7 @@ func (app *App) Run(at string, register http.RouterRegister) error {
 		return e
 	}
 
+	defer app.runDefers()
 	server.Serve(at, func(rw *router.Wrapper, k *http.Kernel) {
 		register(rw, k)
 		for _, rr := range app.routerRegisters {
@@ -122,6 +124,19 @@ func (app *App) RegisterRoutes(rr RouterRegister) *App {
 	return app
 }
 
+//Defer run function, run after server shutdown
+func (app *App) Defer(f func()) *App {
+
+	app.defers = append(app.defers, f)
+	return app
+}
+
+func (app *App) runDefers() {
+	for _, f := range app.defers {
+		f()
+	}
+}
+
 //NewApp: new application instance
 func NewApp(configFs fs.FS) *App {
 
@@ -130,5 +145,6 @@ func NewApp(configFs fs.FS) *App {
 		services:        make([]Service, 0),
 		configService:   &ConfigService{configs: make(map[string]interface{})},
 		routerRegisters: make([]RouterRegister, 0),
+		defers:          make([]func(), 0),
 	}
 }
