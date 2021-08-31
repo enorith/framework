@@ -8,8 +8,9 @@ type ConnectionConfig struct {
 }
 
 type Config struct {
-	Default     string                       `yaml:"default" env:"DB_CONNECTION"`
-	Connections map[string]*ConnectionConfig `yaml:"connections"`
+	Default           string                       `yaml:"default" env:"DB_CONNECTION"`
+	Connections       map[string]*ConnectionConfig `yaml:"connections"`
+	ImplicitInjection bool                         `yaml:"implicit_injection"`
 }
 
 var (

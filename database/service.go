@@ -39,16 +39,16 @@ func RegisterDriver(name string, dr DriverRegister) {
 
 //Service of database
 type Service struct {
+	config Config
 }
 
 //Register service when app starting, before http server start
 // you can configure service, initialize global vars etc.
 // running at main goroutine
-func (s Service) Register(app *framework.App) error {
-	var config Config
-	app.Configure("database", &config)
+func (s *Service) Register(app *framework.App) error {
+	app.Configure("database", &s.config)
 
-	for name, cc := range config.Connections {
+	for name, cc := range s.config.Connections {
 		gormdb.DefaultManager.Register(name, func() (*gorm.DB, error) {
 			register, ok := GetDriverRegister(cc.Driver)
 			if !ok {
@@ -70,7 +70,7 @@ func (s Service) Register(app *framework.App) error {
 		})
 	}
 
-	gormdb.DefaultManager.Using(config.Default)
+	gormdb.DefaultManager.Using(s.config.Default)
 
 	if Migrator != nil {
 		if tx, e := gormdb.DefaultManager.GetConnection(); e == nil {
@@ -86,7 +86,7 @@ func (s Service) Register(app *framework.App) error {
 //Lifetime container callback
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
-func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
+func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
 	ioc.BindFunc(&gorm.DB{}, func(c container.Interface) (interface{}, error) {
 
 		return gormdb.DefaultManager.GetConnection()
@@ -102,6 +102,12 @@ func (s Service) Lifetime(ioc container.Interface, request contracts.RequestCont
 
 		return gormdb.NewPaginator(page, perPage), nil
 	}, false)
+
+	ioc.WithInjector(Injector{r: request, c: s.config, ioc: ioc})
+}
+
+func NewService() *Service {
+	return &Service{}
 }
 
 func init() {

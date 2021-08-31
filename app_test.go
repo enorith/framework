@@ -10,10 +10,7 @@ import (
 	"github.com/enorith/framework/cache"
 	"github.com/enorith/framework/database"
 	"github.com/enorith/framework/redis"
-	"github.com/enorith/http"
 	"github.com/enorith/http/contracts"
-	"github.com/enorith/http/router"
-	"gorm.io/gorm"
 )
 
 type UserProvider struct {
@@ -30,11 +27,11 @@ func (up UserProvider) Attempt(r contracts.RequestContract) (authenticate.User, 
 func TestBootstrap(t *testing.T) {
 	app := framework.NewApp(os.DirFS("test_assets/config"))
 	app.Register(cache.Service{})
-	app.Register(database.Service{})
+	app.Register(database.NewService())
 	app.Register(redis.Service{})
 	authentication.AuthManager.WithProvider("users", UserProvider{})
 	app.Register(authentication.NewAuthService())
-	s, e := app.Bootstrap()
+	_, e := app.Bootstrap()
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -43,16 +40,6 @@ func TestBootstrap(t *testing.T) {
 		t.Log(app.GetConfig())
 		t.Fail()
 	}
-	s.Serve(":8000", func(rw *router.Wrapper, k *http.Kernel) {
-		rw.Get("", func(tx *gorm.DB) map[string]interface{} {
-			us := make(map[string]interface{})
-			tx.Table("users").Find(&us)
-			return us
-		})
 
-		rw.Get("jwt", func(j authenticate.Guard) string {
-			return "ok"
-		})
-	})
 	t.Log(app.GetConfig())
 }
