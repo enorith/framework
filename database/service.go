@@ -19,6 +19,7 @@ var Migrator func(tx *gorm.DB)
 var (
 	driverRegisters = make(map[string]DriverRegister)
 	mu              sync.RWMutex
+	DefaultPageSize = 15
 )
 
 //GetDriverRegister: get registerd driver
@@ -89,6 +90,17 @@ func (s Service) Lifetime(ioc container.Interface, request contracts.RequestCont
 	ioc.BindFunc(&gorm.DB{}, func(c container.Interface) (interface{}, error) {
 
 		return gormdb.DefaultManager.GetConnection()
+	}, false)
+
+	ioc.BindFunc(&gormdb.Paginator{}, func(c container.Interface) (interface{}, error) {
+		page, _ := request.GetInt("page")
+		perPage, _ := request.GetInt("per_page")
+
+		if perPage < 1 {
+			perPage = DefaultPageSize
+		}
+
+		return gormdb.NewPaginator(page, perPage), nil
 	}, false)
 }
 
