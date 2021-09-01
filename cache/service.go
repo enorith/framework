@@ -30,8 +30,9 @@ func (s Service) Register(app *framework.App) error {
 	app.Configure("cache", &s.cc)
 	c.KeyPrefix = s.cc.Prefix
 	s.registerDefaultDrivers()
-	AppCache = c.NewManager(s.cc.Driver)
-	return nil
+	AppCache = c.NewManager()
+
+	return AppCache.Use(s.cc.Driver)
 }
 
 //Lifetime container callback

@@ -6,10 +6,10 @@ import (
 )
 
 type Model struct {
-	*gorm.DB  `gorm:"-" json:"-"`
-	Paginator *gormdb.Paginator `gorm:"-" json:"-"`
-	Dest      interface{}       `gorm:"-" json:"-"`
-	DestSlice interface{}       `gorm:"-" json:"-"`
+	*gorm.DB  `gorm:"-" json:"-" msgpack:"-"`
+	Paginator *gormdb.Paginator `gorm:"-" json:"-"  msgpack:"-"`
+	Dest      interface{}       `gorm:"-" json:"-"  msgpack:"-"`
+	DestSlice interface{}       `gorm:"-" json:"-"  msgpack:"-"`
 }
 
 func (m Model) Paginate() (map[string]interface{}, error) {
