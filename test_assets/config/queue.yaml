@@ -2,7 +2,6 @@ listen: true
 connection: mem
 running_workers:
   - default
-  - nsq
   
 workers:
   default:

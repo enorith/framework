@@ -20,7 +20,7 @@ type Nsq struct {
 	producer  *nsq.Producer
 }
 
-func (n *Nsq) Consume(concurrency int, done chan struct{}) (err error) {
+func (n *Nsq) Consume(concurrency int, exit chan struct{}) (err error) {
 	c := nsq.NewConfig()
 	config := n.configVal
 	n.consumer, err = nsq.NewConsumer(config.Topic, config.Channel, c)
@@ -41,7 +41,7 @@ func (n *Nsq) Consume(concurrency int, done chan struct{}) (err error) {
 	if err != nil {
 		return
 	}
-	<-done
+	<-exit
 	return
 }
 

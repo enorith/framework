@@ -18,10 +18,10 @@ type Mem struct {
 	stopChan chan struct{}
 }
 
-func (m *Mem) Consume(concurrency int, done chan struct{}) error {
+func (m *Mem) Consume(concurrency int, exit chan struct{}) error {
 	for {
 		select {
-		case <-done:
+		case <-exit:
 			return nil
 		case job := <-m.queue:
 			go func() {

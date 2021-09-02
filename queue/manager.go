@@ -46,6 +46,8 @@ func (m *Manager) Work(done chan struct{}, workers ...string) {
 				e := worker.Run(close)
 				if e != nil {
 					log.Printf("[queue] worker [%s] error: %v", w, e)
+				} else {
+					log.Printf("[queue] worker [%s] exited", w)
 				}
 			}(worker, w)
 		}
