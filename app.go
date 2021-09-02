@@ -18,6 +18,8 @@ import (
 
 type RouterRegister func(rw *router.Wrapper)
 
+type DaemonFn func(done chan struct{})
+
 //AppConfig: default app config name
 var AppConfig = "app"
 
@@ -41,7 +43,7 @@ type App struct {
 	configService   *ConfigService
 	routerRegisters []RouterRegister
 	defers          []func()
-	daemons         []func(done chan os.Signal)
+	daemons         []DaemonFn
 }
 
 //Register application service
@@ -107,7 +109,7 @@ func (app *App) Run(at string, register http.RouterRegister) error {
 		return e
 	}
 	wg := new(sync.WaitGroup)
-	app.runDaemons(wg)
+	app.RunDaemons(wg)
 
 	server.Serve(at, func(rw *router.Wrapper, k *http.Kernel) {
 		register(rw, k)
@@ -116,8 +118,8 @@ func (app *App) Run(at string, register http.RouterRegister) error {
 		}
 	})
 
-	app.runDefers()
 	wg.Wait()
+	app.RunDefers()
 	return nil
 }
 
@@ -141,30 +143,43 @@ func (app *App) Defer(f func()) *App {
 }
 
 //Daemon run function, start daemon service before http service started
-func (app *App) Daemon(f func(done chan os.Signal)) *App {
+func (app *App) Daemon(f DaemonFn) *App {
 
 	app.daemons = append(app.daemons, f)
 	return app
 }
 
-func (app *App) runDefers() {
+func (app *App) RunDefers() {
 	for _, f := range app.defers {
 		f()
 	}
 }
 
-func (app *App) runDaemons(wg *sync.WaitGroup) {
+func (app *App) RunDaemons(wg *sync.WaitGroup) {
+
+	lenDaemon := len(app.daemons)
+	done := make(chan struct{}, lenDaemon)
+
+	kill := make(chan os.Signal, 1)
+	signal.Notify(kill, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	for _, f := range app.daemons {
 		wg.Add(1)
-		done := make(chan os.Signal, 1)
-		signal.Notify(done, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-		go func(f func(chan os.Signal)) {
+		go func(f DaemonFn) {
 			defer wg.Done()
 			f(done)
 		}(f)
 	}
+
+	go func() {
+		<-kill
+		i := 0
+		for i < lenDaemon {
+			done <- struct{}{}
+			i++
+		}
+	}()
 }
 
 //NewApp: new application instance
@@ -176,6 +191,6 @@ func NewApp(configFs fs.FS) *App {
 		configService:   &ConfigService{configs: make(map[string]interface{})},
 		routerRegisters: make([]RouterRegister, 0),
 		defers:          make([]func(), 0),
-		daemons:         make([]func(chan os.Signal), 0),
+		daemons:         make([]DaemonFn, 0),
 	}
 }

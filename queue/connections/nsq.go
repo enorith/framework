@@ -2,7 +2,6 @@ package connections
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/enorith/framework/queue/std"
@@ -21,7 +20,7 @@ type Nsq struct {
 	producer  *nsq.Producer
 }
 
-func (n *Nsq) Consume(concurrency int, done chan os.Signal) (err error) {
+func (n *Nsq) Consume(concurrency int, done chan struct{}) (err error) {
 	c := nsq.NewConfig()
 	config := n.configVal
 	n.consumer, err = nsq.NewConsumer(config.Topic, config.Channel, c)
@@ -74,7 +73,8 @@ func (n *Nsq) Dispatch(payload interface{}, delay ...time.Duration) (err error) 
 	if err != nil {
 		return
 	}
-	if len(delay) == 0 {
+
+	if len(delay) == 0 || delay[0] == 0 {
 		err = n.producer.Publish(config.Topic, messageBody)
 	} else {
 		err = n.producer.DeferredPublish(config.Topic, delay[0], messageBody)
@@ -89,6 +89,7 @@ func (n *Nsq) parseConfig() (c Config, e error) {
 	}
 
 	c.Topic = "default"
+	c.Channel = "default"
 
 	var is bool
 

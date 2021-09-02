@@ -32,9 +32,13 @@ func (ij Injector) Injection(abs interface{}, last reflect.Value) (reflect.Value
 			tx, e := gormdb.DefaultManager.GetConnection()
 
 			if e != nil {
-				return last, fmt.Errorf("implicit injection model [%s] error %s", model, e.Error())
+				return last, fmt.Errorf("[database] implicit injection model [%s] error %s", model, e.Error())
 			}
-			tx.First(last.Interface(), id)
+			e = tx.First(last.Interface(), id).Error
+
+			if e != nil {
+				return last, fmt.Errorf("[database] implicit injection model [%s] error %s", model, e.Error())
+			}
 		}
 	}
 

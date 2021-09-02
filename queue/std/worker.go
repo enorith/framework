@@ -1,15 +1,24 @@
 package std
 
 import (
-	"os"
-
 	"github.com/enorith/framework/queue/contracts"
 )
 
 type Worker struct {
-	connection contracts.Connection
+	connection  contracts.Connection
+	concurrency int
 }
 
-func (w *Worker) Run(concurrency int, done chan os.Signal) {
-	w.connection.Consume(concurrency, done)
+func (w *Worker) Run(done chan struct{}) error {
+	return w.connection.Consume(w.concurrency, done)
+}
+func (w *Worker) Close() error {
+	return w.connection.Stop()
+}
+
+func NewWorker(concurrency int, connection contracts.Connection) *Worker {
+	return &Worker{
+		connection:  connection,
+		concurrency: concurrency,
+	}
 }

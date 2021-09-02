@@ -1,12 +1,11 @@
 package contracts
 
 import (
-	"os"
 	"time"
 )
 
 type Connection interface {
-	Consume(concurrency int, done chan os.Signal) error
+	Consume(concurrency int, done chan struct{}) error
 	Stop() error
 	Dispatch(payload interface{}, delay ...time.Duration) error
 }

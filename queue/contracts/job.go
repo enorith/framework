@@ -1,5 +1,9 @@
 package contracts
 
-type Job interface {
-	Handle() error
+type NamedPayload interface {
+	PayloadName() string
+}
+
+type WithConnection interface {
+	QueueConnection() string
 }
