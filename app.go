@@ -2,6 +2,10 @@ package framework
 
 import (
 	"io/fs"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/enorith/config"
@@ -37,6 +41,7 @@ type App struct {
 	configService   *ConfigService
 	routerRegisters []RouterRegister
 	defers          []func()
+	daemons         []func(done chan os.Signal)
 }
 
 //Register application service
@@ -101,14 +106,18 @@ func (app *App) Run(at string, register http.RouterRegister) error {
 	if e != nil {
 		return e
 	}
+	wg := new(sync.WaitGroup)
+	app.runDaemons(wg)
 
-	defer app.runDefers()
 	server.Serve(at, func(rw *router.Wrapper, k *http.Kernel) {
 		register(rw, k)
 		for _, rr := range app.routerRegisters {
 			rr(rw)
 		}
 	})
+
+	app.runDefers()
+	wg.Wait()
 	return nil
 }
 
@@ -131,9 +140,30 @@ func (app *App) Defer(f func()) *App {
 	return app
 }
 
+//Daemon run function, start daemon service before http service started
+func (app *App) Daemon(f func(done chan os.Signal)) *App {
+
+	app.daemons = append(app.daemons, f)
+	return app
+}
+
 func (app *App) runDefers() {
 	for _, f := range app.defers {
 		f()
+	}
+}
+
+func (app *App) runDaemons(wg *sync.WaitGroup) {
+
+	for _, f := range app.daemons {
+		wg.Add(1)
+		done := make(chan os.Signal, 1)
+		signal.Notify(done, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+		go func(f func(chan os.Signal)) {
+			defer wg.Done()
+			f(done)
+		}(f)
 	}
 }
 
@@ -146,5 +176,6 @@ func NewApp(configFs fs.FS) *App {
 		configService:   &ConfigService{configs: make(map[string]interface{})},
 		routerRegisters: make([]RouterRegister, 0),
 		defers:          make([]func(), 0),
+		daemons:         make([]func(chan os.Signal), 0),
 	}
 }

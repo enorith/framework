@@ -2,11 +2,11 @@ package connections
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/enorith/framework/queue/std"
 	"github.com/nsqio/go-nsq"
-	"github.com/vmihailenco/msgpack/v5"
 )
 
 type Config struct {
@@ -21,31 +21,46 @@ type Nsq struct {
 	producer  *nsq.Producer
 }
 
-func (n *Nsq) Consume(concurrency int) (err error) {
+func (n *Nsq) Consume(concurrency int, done chan os.Signal) (err error) {
 	c := nsq.NewConfig()
 	config := n.configVal
 	n.consumer, err = nsq.NewConsumer(config.Topic, config.Channel, c)
 	if err != nil {
 		return err
 	}
-
-	// consumer.AddHandler(&myMessageHandler{})
+	if concurrency > 1 {
+		n.consumer.AddHandler(std.JobHandler{})
+	} else {
+		n.consumer.AddConcurrentHandlers(std.JobHandler{}, concurrency)
+	}
 
 	if config.UsingLookup {
 		return n.consumer.ConnectToNSQLookupd(config.Lookupd)
 	}
 
-	return n.consumer.ConnectToNSQD(config.Nsqd)
+	err = n.consumer.ConnectToNSQD(config.Nsqd)
+	if err != nil {
+		return
+	}
+	<-done
+	return
 }
 
 func (n *Nsq) Stop() error {
 	if n.consumer != nil {
 		n.consumer.Stop()
+		n.consumer = nil
 	}
+
+	if n.producer != nil {
+		n.producer.Stop()
+		n.producer = nil
+	}
+
 	return nil
 }
 
-func (n *Nsq) Dispatch(payload interface{}, delay time.Duration) (err error) {
+func (n *Nsq) Dispatch(payload interface{}, delay ...time.Duration) (err error) {
 	c := nsq.NewConfig()
 	config := n.configVal
 	n.producer, err = nsq.NewProducer(config.Nsqd, c)
@@ -54,15 +69,15 @@ func (n *Nsq) Dispatch(payload interface{}, delay time.Duration) (err error) {
 	}
 	n.producer.SetLogger(nil, 0)
 	var messageBody []byte
-	messageBody, err = msgpack.Marshal(payload)
+	messageBody, err = std.MarshalPayload(payload)
 
 	if err != nil {
 		return
 	}
-	if delay == 0 {
+	if len(delay) == 0 {
 		err = n.producer.Publish(config.Topic, messageBody)
 	} else {
-		err = n.producer.DeferredPublish(config.Topic, delay, messageBody)
+		err = n.producer.DeferredPublish(config.Topic, delay[0], messageBody)
 	}
 
 	return
@@ -111,17 +126,4 @@ func NewNsq(config map[string]interface{}) *Nsq {
 	nsq := &Nsq{config: config}
 	nsq.parseConfig()
 	return nsq
-}
-
-type JobHandler struct {
-}
-
-func (JobHandler) HandleMessage(m *nsq.Message) error {
-	if len(m.Body) == 0 {
-		return nil
-	}
-	var job std.Job
-
-	msgpack.Unmarshal(m.Body, &job)
-	return nil
 }

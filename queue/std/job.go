@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/enorith/supports/reflection"
+	"github.com/nsqio/go-nsq"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
@@ -35,4 +36,27 @@ func ToJob(payload interface{}) (j Job, e error) {
 	j.payload, e = msgpack.Marshal(payload)
 
 	return
+}
+
+func MarshalPayload(payload interface{}) ([]byte, error) {
+	j, e := ToJob(payload)
+
+	if e != nil {
+		return nil, e
+	}
+
+	return msgpack.Marshal(j)
+}
+
+type JobHandler struct {
+}
+
+func (JobHandler) HandleMessage(m *nsq.Message) error {
+	if len(m.Body) == 0 {
+		return nil
+	}
+	var job Job
+
+	msgpack.Unmarshal(m.Body, &job)
+	return nil
 }
