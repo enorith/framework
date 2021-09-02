@@ -12,6 +12,7 @@ type Worker struct {
 func (w *Worker) Run(done chan struct{}) error {
 	return w.connection.Consume(w.concurrency, done)
 }
+
 func (w *Worker) Close() error {
 	return w.connection.Stop()
 }

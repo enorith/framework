@@ -38,16 +38,16 @@ func (m *Manager) Work(done chan struct{}, workers ...string) {
 	wg := new(sync.WaitGroup)
 
 	for _, w := range workers {
-		if broker, ok := m.GetWorker(w); ok {
+		if worker, ok := m.GetWorker(w); ok {
 			wg.Add(1)
-			go func(worker contracts.Worker) {
+			go func(worker contracts.Worker, w string) {
 				defer wg.Done()
 				log.Printf("[queue] worker [%s] listening", w)
 				e := worker.Run(close)
 				if e != nil {
 					log.Printf("[queue] worker [%s] error: %v", w, e)
 				}
-			}(broker)
+			}(worker, w)
 		}
 	}
 	go func() {
