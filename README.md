@@ -14,6 +14,7 @@
 
 ## TODO 
 - [x] Authentication (component incomplete)
+- [x] Message queue (component)
 - [ ] Filesystem (component)
 - [ ] Logging (component)
 - [ ] Database (component, using gorm for now, waiting generics) 
