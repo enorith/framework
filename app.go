@@ -123,6 +123,19 @@ func (app *App) Run(at string, register http.RouterRegister) error {
 	return nil
 }
 
+//RunWithoutServer, run background services without http server
+func (app *App) RunWithoutServer() error {
+	_, e := app.Bootstrap()
+	if e != nil {
+		return e
+	}
+	wg := new(sync.WaitGroup)
+	app.RunDaemons(wg)
+	wg.Wait()
+	app.RunDefers()
+	return nil
+}
+
 //GetEnv: get app env
 func (app *App) GetEnv() string {
 	return app.config.Env
@@ -155,7 +168,12 @@ func (app *App) RunDefers() {
 	}
 }
 
-func (app *App) RunDaemons(wg *sync.WaitGroup) {
+//RunDaemons, run background services
+func (app *App) RunDaemons(wg *sync.WaitGroup, daemon ...bool) {
+	d := true
+	if len(daemon) > 0 {
+		d = daemon[0]
+	}
 
 	lenDaemon := len(app.daemons)
 	done := make(chan struct{}, lenDaemon)
@@ -171,15 +189,20 @@ func (app *App) RunDaemons(wg *sync.WaitGroup) {
 			f(done)
 		}(f)
 	}
-
-	go func() {
+	wait := func() {
 		<-kill
 		i := 0
 		for i < lenDaemon {
 			done <- struct{}{}
 			i++
 		}
-	}()
+	}
+
+	if d {
+		go wait()
+	} else {
+		wait()
+	}
 }
 
 //NewApp: new application instance
