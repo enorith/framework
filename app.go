@@ -37,19 +37,19 @@ type Config struct {
 
 //App: framework application
 type App struct {
-	services        []Service
-	config          Config
-	configFs        fs.FS
-	configService   *ConfigService
-	routerRegisters []RouterRegister
-	defers          []func()
-	daemons         []DaemonFn
+	serviceProviders []ServiceProvider
+	config           Config
+	configFs         fs.FS
+	configService    *ConfigService
+	routerRegisters  []RouterRegister
+	defers           []func()
+	daemons          []DaemonFn
 }
 
-//Register application service
+//Register application service provider
 // service
-func (app *App) Register(service Service) *App {
-	app.services = append(app.services, service)
+func (app *App) Register(service ServiceProvider) *App {
+	app.serviceProviders = append(app.serviceProviders, service)
 	return app
 }
 
@@ -85,7 +85,7 @@ func (app *App) Bootstrap() (*http.Server, error) {
 	}
 
 	app.configService.Register(app)
-	for _, s := range app.services {
+	for _, s := range app.serviceProviders {
 		e := s.Register(app)
 		if e != nil {
 			return nil, e
@@ -94,7 +94,7 @@ func (app *App) Bootstrap() (*http.Server, error) {
 	server := http.NewServer(func(request contracts.RequestContract) container.Interface {
 		con := container.New()
 		app.configService.Lifetime(con, request)
-		for _, s := range app.services {
+		for _, s := range app.serviceProviders {
 			s.Lifetime(con, request)
 		}
 		return con
@@ -204,16 +204,19 @@ func (app *App) RunDaemons(wg *sync.WaitGroup, daemon ...bool) {
 		wait()
 	}
 }
+func (app *App) ServiceProviders() []ServiceProvider {
+	return app.serviceProviders
+}
 
 //NewApp: new application instance
 func NewApp(configFs fs.FS) *App {
 
 	return &App{
-		configFs:        configFs,
-		services:        make([]Service, 0),
-		configService:   &ConfigService{configs: make(map[string]interface{})},
-		routerRegisters: make([]RouterRegister, 0),
-		defers:          make([]func(), 0),
-		daemons:         make([]DaemonFn, 0),
+		configFs:         configFs,
+		serviceProviders: make([]ServiceProvider, 0),
+		configService:    &ConfigService{configs: make(map[string]interface{})},
+		routerRegisters:  make([]RouterRegister, 0),
+		defers:           make([]func(), 0),
+		daemons:          make([]DaemonFn, 0),
 	}
 }

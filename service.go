@@ -8,7 +8,7 @@ import (
 	"github.com/enorith/supports/reflection"
 )
 
-type Service interface {
+type ServiceProvider interface {
 	//Register service when app starting, before http server start
 	// you can configure service, prepare global vars etc.
 	// running at main goroutine
