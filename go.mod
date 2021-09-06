@@ -21,6 +21,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/valyala/fasthttp v1.29.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/exp v0.0.0-20210903013509-41231fe85c93 // indirect
 	gorm.io/driver/mysql v1.1.2

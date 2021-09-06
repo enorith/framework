@@ -9,9 +9,6 @@ import (
 	"time"
 
 	"github.com/enorith/config"
-	"github.com/enorith/container"
-	"github.com/enorith/http"
-	"github.com/enorith/http/contracts"
 	"github.com/enorith/http/router"
 	"github.com/enorith/supports/carbon"
 )
@@ -33,23 +30,24 @@ type Config struct {
 	Locale   string `yaml:"locale" env:"APP_LOCALE" default:"en"`
 	Url      string `yaml:"url" env:"APP_URL" default:"http://localhost"`
 	Timezone string `yaml:"timezone" env:"APP_TIMEZONE" default:""`
+	Port     int    `yaml:"port" env:"APP_PORT" default:"8000"`
 }
 
 //App: framework application
 type App struct {
-	serviceProviders []ServiceProvider
-	config           Config
-	configFs         fs.FS
-	configService    *ConfigService
-	routerRegisters  []RouterRegister
-	defers           []func()
-	daemons          []DaemonFn
+	services        []Service
+	config          Config
+	configFs        fs.FS
+	configService   *ConfigService
+	routerRegisters []RouterRegister
+	defers          []func()
+	daemons         []DaemonFn
 }
 
 //Register application service provider
 // service
-func (app *App) Register(service ServiceProvider) *App {
-	app.serviceProviders = append(app.serviceProviders, service)
+func (app *App) Register(service Service) *App {
+	app.services = append(app.services, service)
 	return app
 }
 
@@ -75,7 +73,7 @@ func (app *App) GetConfig() Config {
 }
 
 //Bootstrap application, will call before app run
-func (app *App) Bootstrap() (*http.Server, error) {
+func (app *App) Bootstrap() error {
 	app.Configure(AppConfig, &app.config)
 	if app.config.Timezone != "" {
 		loc, e := time.LoadLocation(app.config.Timezone)
@@ -83,41 +81,26 @@ func (app *App) Bootstrap() (*http.Server, error) {
 			carbon.Timezone = loc
 		}
 	}
-
-	app.configService.Register(app)
-	for _, s := range app.serviceProviders {
+	app.Register(app.configService)
+	// app.configService.Register(app)
+	for _, s := range app.services {
 		e := s.Register(app)
 		if e != nil {
-			return nil, e
+			return e
 		}
 	}
-	server := http.NewServer(func(request contracts.RequestContract) container.Interface {
-		con := container.New()
-		app.configService.Lifetime(con, request)
-		for _, s := range app.serviceProviders {
-			s.Lifetime(con, request)
-		}
-		return con
-	}, app.config.Debug)
-	return server, nil
+
+	return nil
 }
 
 //Run application service
-func (app *App) Run(at string, register http.RouterRegister) error {
-	server, e := app.Bootstrap()
+func (app *App) Run() error {
+	e := app.Bootstrap()
 	if e != nil {
 		return e
 	}
 	wg := new(sync.WaitGroup)
 	app.RunDaemons(wg)
-
-	server.Serve(at, func(rw *router.Wrapper, k *http.Kernel) {
-		register(rw, k)
-		for _, rr := range app.routerRegisters {
-			rr(rw)
-		}
-	})
-
 	wg.Wait()
 	app.RunDefers()
 	return nil
@@ -125,7 +108,7 @@ func (app *App) Run(at string, register http.RouterRegister) error {
 
 //RunWithoutServer, run background services without http server
 func (app *App) RunWithoutServer() error {
-	_, e := app.Bootstrap()
+	e := app.Bootstrap()
 	if e != nil {
 		return e
 	}
@@ -204,19 +187,19 @@ func (app *App) RunDaemons(wg *sync.WaitGroup, daemon ...bool) {
 		wait()
 	}
 }
-func (app *App) ServiceProviders() []ServiceProvider {
-	return app.serviceProviders
+func (app *App) Services() []Service {
+	return app.services
 }
 
 //NewApp: new application instance
 func NewApp(configFs fs.FS) *App {
 
 	return &App{
-		configFs:         configFs,
-		serviceProviders: make([]ServiceProvider, 0),
-		configService:    &ConfigService{configs: make(map[string]interface{})},
-		routerRegisters:  make([]RouterRegister, 0),
-		defers:           make([]func(), 0),
-		daemons:          make([]DaemonFn, 0),
+		configFs:        configFs,
+		services:        make([]Service, 0),
+		configService:   &ConfigService{configs: make(map[string]interface{})},
+		routerRegisters: make([]RouterRegister, 0),
+		defers:          make([]func(), 0),
+		daemons:         make([]DaemonFn, 0),
 	}
 }

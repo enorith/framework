@@ -31,7 +31,7 @@ func TestBootstrap(t *testing.T) {
 	app.Register(redis.Service{})
 	authentication.AuthManager.WithProvider("users", UserProvider{})
 	app.Register(authentication.NewAuthService())
-	_, e := app.Bootstrap()
+	e := app.Bootstrap()
 	if e != nil {
 		t.Fatal(e)
 	}
