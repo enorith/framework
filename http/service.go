@@ -9,6 +9,7 @@ import (
 	"github.com/enorith/gormdb"
 	h "github.com/enorith/http"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/http/router"
 	"github.com/enorith/http/validation"
 	"github.com/enorith/http/validation/rule"
 )
@@ -18,6 +19,10 @@ type HttpService interface {
 	// usually register request lifetime instance to IoC-Container (per-request unique)
 	// this function will run before every request handling
 	Lifetime(ioc container.Interface, request contracts.RequestContract)
+}
+
+type RoutesRegister interface {
+	RegisterRoutes(rw *router.Wrapper)
 }
 
 type Service struct {
@@ -59,7 +64,14 @@ func (s *Service) Register(app *framework.App) error {
 			}
 			return ioc
 		}, config.Debug)
-		server.Serve(fmt.Sprintf(":%d", config.Port), s.rg, done)
+		server.Serve(fmt.Sprintf(":%d", config.Port), func(rw *router.Wrapper, k *h.Kernel) {
+			for _, s := range services {
+				if rr, ok := s.(RoutesRegister); ok {
+					rr.RegisterRoutes(rw)
+				}
+			}
+			s.rg(rw, k)
+		}, done)
 	})
 
 	return nil

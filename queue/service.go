@@ -70,7 +70,6 @@ func (s *Service) configure() error {
 		if e != nil {
 			return e
 		}
-
 		queue.DefaultManager.RegisterWorker(w, std.NewWorker(wc.Concurrency, c))
 	}
 
