@@ -35,6 +35,12 @@ type Service struct {
 	config Config
 }
 
+//WithRoutes, with http routes
+func (s *Service) WithRoutes(rg func(rw *router.Wrapper)) *Service {
+	s.rg = rg
+	return s
+}
+
 //Register service when app starting, before http server start
 // you can configure service, prepare global vars etc.
 // running at main goroutine
@@ -79,13 +85,15 @@ func (s *Service) Register(app *framework.App) error {
 					rr.RegisterRoutes(rw)
 				}
 			}
-			s.rg(rw)
+			if s.rg != nil {
+				s.rg(rw)
+			}
 		}, done)
 	})
 
 	return nil
 }
 
-func NewService(rg func(rw *router.Wrapper)) *Service {
-	return &Service{rg: rg}
+func NewService() *Service {
+	return &Service{}
 }
