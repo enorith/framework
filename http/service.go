@@ -14,6 +14,11 @@ import (
 	"github.com/enorith/http/validation/rule"
 )
 
+type Config struct {
+	Port      int  `yaml:"port" env:"HTTP_PORT" default:"8000"`
+	AccessLog bool `yaml:"access_log" env:"HTTP_ACCESS_LOG" default:"false"`
+}
+
 type HttpService interface {
 	//Lifetime container callback
 	// usually register request lifetime instance to IoC-Container (per-request unique)
@@ -26,13 +31,16 @@ type RoutesRegister interface {
 }
 
 type Service struct {
-	rg h.RouterRegister
+	rg     func(rw *router.Wrapper)
+	config Config
 }
 
 //Register service when app starting, before http server start
 // you can configure service, prepare global vars etc.
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
+
+	app.Configure("http", &s.config)
 	validation.Register("unique", func(attribute string, r contracts.InputSource, args ...string) (rule.Rule, error) {
 		var field string
 		if len(args) == 0 {
@@ -64,19 +72,20 @@ func (s *Service) Register(app *framework.App) error {
 			}
 			return ioc
 		}, config.Debug)
-		server.Serve(fmt.Sprintf(":%d", config.Port), func(rw *router.Wrapper, k *h.Kernel) {
+		server.Serve(fmt.Sprintf(":%d", s.config.Port), func(rw *router.Wrapper, k *h.Kernel) {
+			k.OutputLog = s.config.AccessLog
 			for _, s := range services {
 				if rr, ok := s.(RoutesRegister); ok {
 					rr.RegisterRoutes(rw)
 				}
 			}
-			s.rg(rw, k)
+			s.rg(rw)
 		}, done)
 	})
 
 	return nil
 }
 
-func NewService(rg h.RouterRegister) *Service {
+func NewService(rg func(rw *router.Wrapper)) *Service {
 	return &Service{rg: rg}
 }
