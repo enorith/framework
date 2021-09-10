@@ -13,11 +13,6 @@ type Service interface {
 	// you can configure service, prepare global vars etc.
 	// running at main goroutine
 	Register(app *App) error
-
-	// //Lifetime container callback
-	// // usually register request lifetime instance to IoC-Container (per-request unique)
-	// // this function will run before every request handling
-	// Lifetime(ioc container.Interface, request contracts.RequestContract)
 }
 
 //ConfigService of application

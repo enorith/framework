@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	"github.com/enorith/config"
-	"github.com/enorith/container"
 	"github.com/enorith/framework"
-	"github.com/enorith/http/contracts"
 	"github.com/enorith/language"
 )
 
@@ -47,12 +45,6 @@ func (s *LangService) Register(app *framework.App) error {
 	}
 
 	return e
-}
-
-//Lifetime container callback
-// usually register request lifetime instance to IoC-Container (per-request unique)
-// this function will run before every request
-func (s *LangService) Lifetime(ioc container.Interface, request contracts.RequestContract) {
 }
 
 func NewService(fs fs.FS, locale ...string) *LangService {
