@@ -13,8 +13,10 @@ workers:
     
 connections:
   nsq:
-    type: nsq # support: nsq, mem
-    nsqd: 127.0.0.1:49157
-    #nsqlookupd: localhost:4161
+    driver: nsq # support: nsq, mem
+    config:
+      nsqd: 127.0.0.1:49157
+      #nsqlookupd: localhost:4161
   mem:
-    type: mem
+    driver: mem
+      

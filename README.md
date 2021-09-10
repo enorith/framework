@@ -19,3 +19,4 @@
 - [ ] Logging (component)
 - [ ] Database (component, using gorm for now, waiting generics) 
 - [ ] CLI application
+- [ ] Global service container, copy for request lifetime

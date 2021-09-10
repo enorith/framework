@@ -1,6 +1,10 @@
 package queue
 
 import (
+	"fmt"
+	"sync"
+
+	"github.com/enorith/config"
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
 	"github.com/enorith/http/contracts"
@@ -8,19 +12,55 @@ import (
 	"github.com/enorith/queue/connections"
 	c "github.com/enorith/queue/contracts"
 	"github.com/enorith/queue/std"
+	"gopkg.in/yaml.v3"
 )
+
+type DriverRegister func(config yaml.Node) (c.Connection, error)
+
+var (
+	driverRegisters = make(map[string]DriverRegister)
+	mu              sync.RWMutex
+)
+
+func RegisterDriver(name string, dr DriverRegister) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	driverRegisters[name] = dr
+}
+
+func GetDriverRegister(name string) (DriverRegister, bool) {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	dr, ok := driverRegisters[name]
+
+	return dr, ok
+}
 
 type WorkerConfig struct {
 	Connection  string `yaml:"connection"`
 	Concurrency int    `yaml:"concurrency"`
 }
 
+type ConConf struct {
+	Driver string    `yaml:"driver"`
+	Config yaml.Node `yaml:"config"`
+}
+
 type Config struct {
-	Listening      bool                              `yaml:"listen" env:"QUEUE_LISTEN" default:"true"`
-	Connection     string                            `yaml:"connection" env:"QUEUE_CONNECTION" default:"mem"`
-	RunningWorkers []string                          `yaml:"running_workers"`
-	Workers        map[string]WorkerConfig           `yaml:"workers"`
-	Connections    map[string]map[string]interface{} `yaml:"connections"`
+	Listening      bool                    `yaml:"listen" env:"QUEUE_LISTEN" default:"true"`
+	Connection     string                  `yaml:"connection" env:"QUEUE_CONNECTION" default:"mem"`
+	RunningWorkers []string                `yaml:"running_workers"`
+	Workers        map[string]WorkerConfig `yaml:"workers"`
+	Connections    map[string]ConConf      `yaml:"connections"`
+}
+
+type NsqConfig struct {
+	Nsqd       string `yaml:"nsqd" env:"QUEUE_NSQD"`
+	Nsqlookupd string `yaml:"nsqlookupd" env:"QUEUE_NSQLOOKUPD"`
+	Channel    string `yaml:"channel" env:"QUEUE_NSQCHANNEL" default:"default"`
+	Topic      string `yaml:"topic" env:"QUEUE_NSQCHANNEL" default:"default"`
 }
 
 type Service struct {
@@ -32,14 +72,11 @@ type Service struct {
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
 	app.Configure("queue", &s.config)
-	queue.DefaultManager.RegisterConnection("nsq", func(config map[string]interface{}) c.Connection {
-		return connections.NewNsq(config)
-	})
-
-	queue.DefaultManager.RegisterConnection("mem", func(config map[string]interface{}) c.Connection {
-		return connections.NewMem()
-	})
-	s.configure()
+	WithDefaults()
+	e := s.configure()
+	if e != nil {
+		return e
+	}
 	if s.config.Listening {
 		app.Daemon(func(done chan struct{}) {
 			queue.DefaultManager.Work(done, s.config.RunningWorkers...)
@@ -64,9 +101,20 @@ func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestCon
 }
 
 func (s *Service) configure() error {
+	for con, cf := range s.config.Connections {
+		dr, ok := GetDriverRegister(cf.Driver)
+		if !ok {
+			return fmt.Errorf("queue driver [%s] not registerd", cf.Driver)
+		}
+		conf := cf.Config
+
+		queue.DefaultManager.RegisterConnection(con, func() (c.Connection, error) {
+			return dr(conf)
+		})
+	}
+
 	for w, wc := range s.config.Workers {
-		t, conConfig := s.connectionConfig(wc.Connection)
-		c, e := queue.DefaultManager.ResolveConnection(t, conConfig)
+		c, e := queue.DefaultManager.GetConnection(wc.Connection)
 		if e != nil {
 			return e
 		}
@@ -76,15 +124,28 @@ func (s *Service) configure() error {
 	return nil
 }
 
-func (s *Service) connectionConfig(con string) (string, map[string]interface{}) {
-	conConfig := s.config.Connections[con]
-	if t, ok := conConfig["type"].(string); ok {
-		return t, conConfig
-	}
-
-	return s.config.Connection, conConfig
-}
-
 func NewService() *Service {
 	return &Service{}
+}
+
+func WithDefaults() {
+	RegisterDriver("nsq", func(conf yaml.Node) (c.Connection, error) {
+		var c NsqConfig
+		e := config.UnmarshalNode(conf, &c)
+		if e != nil {
+			return nil, e
+		}
+
+		return connections.NewNsqFromConfig(connections.NsqConfig{
+			Nsqd:    c.Nsqd,
+			Lookupd: c.Nsqlookupd,
+			Channel: c.Channel,
+			Topic:   c.Topic,
+		}), nil
+	})
+
+	RegisterDriver("mem", func(conf yaml.Node) (c.Connection, error) {
+
+		return connections.NewMem(), nil
+	})
 }
