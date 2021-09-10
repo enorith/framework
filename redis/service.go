@@ -16,8 +16,8 @@ var Client rds.Cmdable
 var redisType = reflect.TypeOf((*rds.Cmdable)(nil)).Elem()
 
 type RedisConfig struct {
-	Hosts string `yaml:"hosts" default:"127.0.0.1:6379"`
-	DB    int    `yaml:"database" default:"0"`
+	Hosts string `yaml:"hosts" default:"127.0.0.1:6379" env:"REDIS_HOSTS"`
+	DB    int    `yaml:"database" default:"0" env:"REDIS_DB"`
 }
 
 type Service struct {

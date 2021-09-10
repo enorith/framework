@@ -47,6 +47,7 @@ type Service struct {
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
 	app.Configure("database", &s.config)
+	WithDefaults()
 
 	for name, cc := range s.config.Connections {
 		gormdb.DefaultManager.Register(name, func() (*gorm.DB, error) {
@@ -110,7 +111,7 @@ func NewService() *Service {
 	return &Service{}
 }
 
-func init() {
+func WithDefaults() {
 	RegisterDriver("mysql", func(dsn string) gorm.Dialector {
 		return mysql.Open(dsn)
 	})

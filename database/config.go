@@ -3,8 +3,8 @@ package database
 import "time"
 
 type ConnectionConfig struct {
-	Driver string `yaml:"driver" env:"DB_DRIVER" default:"mysql"`
-	DSN    string `yaml:"dsn" env:"DB_DSN"`
+	Driver string `yaml:"driver" default:"mysql"`
+	DSN    string `yaml:"dsn"`
 }
 
 type Config struct {

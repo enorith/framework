@@ -59,8 +59,8 @@ type Config struct {
 type NsqConfig struct {
 	Nsqd       string `yaml:"nsqd" env:"QUEUE_NSQD"`
 	Nsqlookupd string `yaml:"nsqlookupd" env:"QUEUE_NSQLOOKUPD"`
-	Channel    string `yaml:"channel" env:"QUEUE_NSQCHANNEL" default:"default"`
-	Topic      string `yaml:"topic" env:"QUEUE_NSQCHANNEL" default:"default"`
+	Channel    string `yaml:"channel" default:"default"`
+	Topic      string `yaml:"topic" default:"default"`
 }
 
 type Service struct {
