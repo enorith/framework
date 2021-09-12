@@ -4,7 +4,7 @@ import "time"
 
 type ConnectionConfig struct {
 	Driver string `yaml:"driver" default:"mysql"`
-	DSN    string `yaml:"dsn"`
+	DSN    string `yaml:"dsn" env:"DB_DSN"`
 }
 
 type Config struct {
