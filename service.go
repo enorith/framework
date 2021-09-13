@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/enorith/container"
-	"github.com/enorith/http/contracts"
 	"github.com/enorith/supports/reflection"
 )
 
@@ -32,23 +31,20 @@ func (cs *ConfigService) Add(name string, config interface{}) *ConfigService {
 //Register config service when app starting
 //
 func (cs *ConfigService) Register(app *App) error {
+	app.Bind(func(ioc container.Interface) {
+		cs.mu.RLock()
+		defer cs.mu.RUnlock()
+		for k, v := range cs.configs {
+			sv := reflection.StructValue(v)
+			st := reflection.StructType(v)
+			resolver := func(c container.Interface) (interface{}, error) {
+				return sv, nil
+			}
+
+			ioc.BindFunc(st, resolver, true)
+			ioc.BindFunc("config."+k, resolver, true)
+		}
+	})
 
 	return nil
-}
-
-//Lifetime container callback
-// register config instance to request IoC-Container
-func (cs *ConfigService) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	cs.mu.RLock()
-	defer cs.mu.RUnlock()
-	for k, v := range cs.configs {
-		sv := reflection.StructValue(v)
-		st := reflection.StructType(v)
-		resolver := func(c container.Interface) (interface{}, error) {
-			return sv, nil
-		}
-
-		ioc.BindFunc(st, resolver, true)
-		ioc.BindFunc("config."+k, resolver, true)
-	}
 }
