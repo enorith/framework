@@ -81,6 +81,12 @@ func (s *Service) Register(app *framework.App) error {
 		}
 	}
 
+	app.Bind(func(ioc container.Interface) {
+		ioc.BindFunc(&gorm.DB{}, func(c container.Interface) (interface{}, error) {
+			return gormdb.DefaultManager.GetConnection()
+		}, false)
+	})
+
 	return nil
 }
 
@@ -88,10 +94,6 @@ func (s *Service) Register(app *framework.App) error {
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
 func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	ioc.BindFunc(&gorm.DB{}, func(c container.Interface) (interface{}, error) {
-
-		return gormdb.DefaultManager.GetConnection()
-	}, false)
 
 	ioc.BindFunc(&gormdb.Paginator{}, func(c container.Interface) (interface{}, error) {
 		page, _ := request.GetInt("page")

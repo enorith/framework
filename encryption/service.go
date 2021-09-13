@@ -5,7 +5,6 @@ import (
 
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
-	"github.com/enorith/http/contracts"
 )
 
 var DefaultEncrypter Encrypter
@@ -22,14 +21,11 @@ func (s Service) Register(app *framework.App) error {
 
 	DefaultEncrypter = NewAesEncrypter([]byte(app.GetConfig().Key))
 
-	return nil
-}
+	app.Bind(func(ioc container.Interface) {
+		ioc.BindFunc(EncrypterType, func(c container.Interface) (interface{}, error) {
+			return DefaultEncrypter, nil
+		}, true)
+	})
 
-//Lifetime container callback
-// usually register request lifetime instance to IoC-Container (per-request unique)
-// this function will run before every request handling
-func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	ioc.BindFunc(EncrypterType, func(c container.Interface) (interface{}, error) {
-		return DefaultEncrypter, nil
-	}, true)
+	return nil
 }

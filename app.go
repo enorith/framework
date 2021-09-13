@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/enorith/config"
+	"github.com/enorith/container"
 	"github.com/enorith/http/router"
 	"github.com/enorith/supports/carbon"
 )
@@ -16,6 +17,8 @@ import (
 type RouterRegister func(rw *router.Wrapper)
 
 type DaemonFn func(done chan struct{})
+
+type BindFunc func(ioc container.Interface)
 
 //AppConfig: default app config name
 var AppConfig = "app"
@@ -42,6 +45,17 @@ type App struct {
 	routerRegisters []RouterRegister
 	defers          []func()
 	daemons         []DaemonFn
+	container       container.Interface
+}
+
+//Bind instance to global ioc-container
+func (app *App) Bind(bf BindFunc) {
+	bf(app.container)
+}
+
+//Container get global ioc-container
+func (app *App) Container() container.Interface {
+	return app.container
 }
 
 //Register application service provider
@@ -95,19 +109,6 @@ func (app *App) Bootstrap() error {
 
 //Run application service
 func (app *App) Run() error {
-	e := app.Bootstrap()
-	if e != nil {
-		return e
-	}
-	wg := new(sync.WaitGroup)
-	app.RunDaemons(wg)
-	wg.Wait()
-	app.RunDefers()
-	return nil
-}
-
-//RunWithoutServer, run background services without http server
-func (app *App) RunWithoutServer() error {
 	e := app.Bootstrap()
 	if e != nil {
 		return e
@@ -201,5 +202,6 @@ func NewApp(configFs fs.FS) *App {
 		routerRegisters: make([]RouterRegister, 0),
 		defers:          make([]func(), 0),
 		daemons:         make([]DaemonFn, 0),
+		container:       container.New(),
 	}
 }

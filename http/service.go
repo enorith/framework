@@ -70,7 +70,7 @@ func (s *Service) Register(app *framework.App) error {
 		config := app.GetConfig()
 		services := app.Services()
 		server := NewServer(func(request contracts.RequestContract) container.Interface {
-			ioc := container.New()
+			ioc := app.Container().Clone()
 			for _, s := range services {
 				if hs, ok := s.(HttpService); ok {
 					hs.Lifetime(ioc, request)

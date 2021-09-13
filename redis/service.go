@@ -7,7 +7,6 @@ import (
 
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
-	"github.com/enorith/http/contracts"
 	rds "github.com/go-redis/redis/v8"
 )
 
@@ -42,16 +41,13 @@ func (s Service) Register(app *framework.App) error {
 			DB:   rc.DB,
 		})
 	}
-	return nil
-}
 
-//Lifetime container callback
-// usually register request lifetime instance to IoC-Container (per-request unique)
-// this function will run before every request
-func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	ioc.BindFunc(redisType, func(c container.Interface) (interface{}, error) {
-		return Client, nil
-	}, true)
+	app.Bind(func(ioc container.Interface) {
+		ioc.BindFunc(redisType, func(c container.Interface) (interface{}, error) {
+			return Client, nil
+		}, true)
+	})
+	return nil
 }
 
 func (s *Service) parseAddress(address string) []string {

@@ -7,7 +7,6 @@ import (
 	"github.com/enorith/config"
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
-	"github.com/enorith/http/contracts"
 	"github.com/enorith/queue"
 	"github.com/enorith/queue/connections"
 	c "github.com/enorith/queue/contracts"
@@ -87,17 +86,14 @@ func (s *Service) Register(app *framework.App) error {
 		queue.DefaultManager.Close(s.config.RunningWorkers...)
 	})
 
+	app.Bind(func(ioc container.Interface) {
+		ioc.BindFunc(queue.Dispatcher{}, func(c container.Interface) (interface{}, error) {
+			return queue.DefaultDispatcher, nil
+		}, false)
+	})
+
 	queue.DefaultDispatcher = queue.Dispatcher{DefaultConnection: s.config.Connection}
 	return nil
-}
-
-//Lifetime container callback
-// usually register request lifetime instance to IoC-Container (per-request unique)
-// this function will run before every request handling
-func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	ioc.BindFunc(queue.Dispatcher{}, func(c container.Interface) (interface{}, error) {
-		return queue.DefaultDispatcher, nil
-	}, false)
 }
 
 func (s *Service) configure() error {

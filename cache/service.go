@@ -8,7 +8,6 @@ import (
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
 	appRedis "github.com/enorith/framework/redis"
-	"github.com/enorith/http/contracts"
 	"github.com/go-redis/cache/v8"
 	gc "github.com/patrickmn/go-cache"
 )
@@ -32,18 +31,15 @@ func (s Service) Register(app *framework.App) error {
 	s.registerDefaultDrivers()
 	AppCache = c.NewManager()
 
-	return AppCache.Use(s.cc.Driver)
-}
+	app.Bind(func(ioc container.Interface) {
+		resolver := func(c container.Interface) (interface{}, error) {
+			return AppCache, nil
+		}
+		ioc.BindFunc(&c.Manager{}, resolver, true)
+		ioc.BindFunc(RepositoryType, resolver, true)
+	})
 
-//Lifetime container callback
-// usually register request lifetime instance to IoC-Container (per-request unique)
-// this function will run before every request
-func (s Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
-	resolver := func(c container.Interface) (interface{}, error) {
-		return AppCache, nil
-	}
-	ioc.BindFunc(&c.Manager{}, resolver, true)
-	ioc.BindFunc(RepositoryType, resolver, true)
+	return AppCache.Use(s.cc.Driver)
 }
 
 func (s Service) registerDefaultDrivers() {
