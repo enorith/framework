@@ -2,6 +2,8 @@ package queue
 
 import (
 	"fmt"
+	"log"
+	"reflect"
 	"sync"
 
 	"github.com/enorith/config"
@@ -91,9 +93,39 @@ func (s *Service) Register(app *framework.App) error {
 			return queue.DefaultDispatcher, nil
 		}, false)
 	})
+	s.withInvoker(app)
 
 	queue.DefaultDispatcher = queue.Dispatcher{DefaultConnection: s.config.Connection}
 	return nil
+}
+
+func (s *Service) withInvoker(app *framework.App) {
+	ioc := app.Container()
+	std.Invoker = func(payloadType reflect.Type, payloadValue, funcValue reflect.Value, funcType reflect.Type) {
+		var params []reflect.Value
+		if payloadType.Kind() == reflect.Ptr {
+			params = []reflect.Value{payloadValue}
+		} else {
+			params = []reflect.Value{reflect.Indirect(payloadValue)}
+		}
+		for i := 1; i < funcType.NumIn(); i++ {
+			argType := funcType.In(i)
+
+			v, e := ioc.Instance(argType)
+			if e != nil {
+				log.Printf("[queue] invoke handler error: %v, try to instance %s", e, argType)
+				return
+			}
+
+			if !v.IsValid() {
+				log.Printf("[queue] invoke handler error: invalid instance, try to instance %s", argType)
+				return
+			}
+			params = append(params, v)
+		}
+
+		funcValue.Call(params)
+	}
 }
 
 func (s *Service) configure() error {
