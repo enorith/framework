@@ -7,37 +7,37 @@ import (
 )
 
 func Has(key string) bool {
-	return AppCache.Has(key)
+	return Default.Has(key)
 }
 
 func Get(key string, object interface{}) (c.Value, bool) {
-	return AppCache.Get(key, object)
+	return Default.Get(key, object)
 }
 
 func Put(key string, data interface{}, d time.Duration) error {
-	return AppCache.Put(key, data, d)
+	return Default.Put(key, data, d)
 }
 
 func Forever(key string, data interface{}) error {
-	return AppCache.Forever(key, data)
+	return Default.Forever(key, data)
 }
 
 func Remove(key string) bool {
-	return AppCache.Remove(key)
+	return Default.Remove(key)
 }
 
 func Increment(key string) bool {
-	return AppCache.Increment(key)
+	return Default.Increment(key)
 }
 
 func Decrement(key string) bool {
-	return AppCache.Decrement(key)
+	return Default.Decrement(key)
 }
 
 func Add(key string, data interface{}, d time.Duration) bool {
-	return AppCache.Add(key, data, d)
+	return Default.Add(key, data, d)
 }
 
 func Use(driver string) error {
-	return AppCache.Use(driver)
+	return Default.Use(driver)
 }

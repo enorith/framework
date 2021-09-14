@@ -89,7 +89,7 @@ func (l *Limiter) ResetAttempts(key string) bool {
 func Throttle(minutes int, max int) *ThrottleRequests {
 	return &ThrottleRequests{
 		&Limiter{
-			cache: c.AppCache,
+			cache: c.Default,
 		},
 		minutes,
 		max,
