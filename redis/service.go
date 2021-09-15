@@ -25,10 +25,6 @@ type ConnectionConfig struct {
 
 type RedisConfig struct {
 	Default     string `yaml:"default" env:"REDIS_CONNECTION"`
-	Hosts       string `yaml:"hosts" default:"127.0.0.1:6379" env:"REDIS_HOSTS"`
-	DB          int    `yaml:"database" default:"0" env:"REDIS_DB"`
-	Username    string `yaml:"username"`
-	Password    string `yaml:"password"`
 	Connections map[string]ConnectionConfig
 }
 

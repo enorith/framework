@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/enorith/container"
@@ -77,7 +78,7 @@ func (s *Service) Register(app *framework.App) error {
 		if tx, e := gormdb.DefaultManager.GetConnection(); e == nil {
 			Migrator(tx)
 		} else {
-			return e
+			log.Printf("[database] migration error %v", e)
 		}
 	}
 

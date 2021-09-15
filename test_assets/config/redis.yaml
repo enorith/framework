@@ -3,4 +3,8 @@ connections:
   default:
     addrs:
       - 127.0.0.1:6379
+    database: 0
+  cache:
+    addrs:
+      - 127.0.0.1:6379
     database: 1
