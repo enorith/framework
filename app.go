@@ -16,12 +16,15 @@ import (
 
 type RouterRegister func(rw *router.Wrapper)
 
-type DaemonFn func(done chan struct{})
+type DaemonFn func(exit chan struct{})
 
 type BindFunc func(ioc container.Interface)
 
-//AppConfig: default app config name
-var AppConfig = "app"
+//AppConfigName: default app config name
+var AppConfigName = "app"
+
+//AppConfig global var
+var AppConfig Config
 
 //ConfigExt: default config extension
 var ConfigExt = ".yaml"
@@ -88,7 +91,6 @@ func (app *App) GetConfig() Config {
 
 //Bootstrap application, will call before app run
 func (app *App) Bootstrap() error {
-	app.Configure(AppConfig, &app.config)
 	if app.config.Timezone != "" {
 		loc, e := time.LoadLocation(app.config.Timezone)
 		if e == nil {
@@ -160,7 +162,7 @@ func (app *App) RunDaemons(wg *sync.WaitGroup, daemon ...bool) {
 	}
 
 	lenDaemon := len(app.daemons)
-	done := make(chan struct{}, lenDaemon)
+	exit := make(chan struct{}, lenDaemon)
 
 	kill := make(chan os.Signal, 1)
 	signal.Notify(kill, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
@@ -170,14 +172,14 @@ func (app *App) RunDaemons(wg *sync.WaitGroup, daemon ...bool) {
 
 		go func(f DaemonFn) {
 			defer wg.Done()
-			f(done)
+			f(exit)
 		}(f)
 	}
 	wait := func() {
 		<-kill
 		i := 0
 		for i < lenDaemon {
-			done <- struct{}{}
+			exit <- struct{}{}
 			i++
 		}
 	}
@@ -194,8 +196,7 @@ func (app *App) Services() []Service {
 
 //NewApp: new application instance
 func NewApp(configFs fs.FS) *App {
-
-	return &App{
+	app := &App{
 		configFs:        configFs,
 		services:        make([]Service, 0),
 		configService:   &ConfigService{configs: make(map[string]interface{})},
@@ -204,4 +205,8 @@ func NewApp(configFs fs.FS) *App {
 		daemons:         make([]DaemonFn, 0),
 		container:       container.New(),
 	}
+	app.Configure(AppConfigName, &app.config)
+
+	AppConfig = app.config
+	return app
 }

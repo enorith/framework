@@ -6,10 +6,10 @@ require (
 	github.com/enorith/authenticate v0.0.0-20210819101714-075985a68865
 	github.com/enorith/cache v0.0.5
 	github.com/enorith/config v0.0.3
-	github.com/enorith/container v0.0.16
+	github.com/enorith/container v0.0.17
 	github.com/enorith/exception v0.0.2
 	github.com/enorith/gormdb v0.0.0-20210826072414-e6f6875230a7
-	github.com/enorith/http v0.0.24
+	github.com/enorith/http v0.0.26
 	github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e
 	github.com/enorith/queue v0.0.5
 	github.com/enorith/redis v1.0.0

@@ -19,7 +19,7 @@ type Config struct {
 	AccessLog bool `yaml:"access_log" env:"HTTP_ACCESS_LOG" default:"false"`
 }
 
-type HttpService interface {
+type HttpBoundle interface {
 	//Lifetime container callback
 	// usually register request lifetime instance to IoC-Container (per-request unique)
 	// this function will run before every request handling
@@ -72,7 +72,7 @@ func (s *Service) Register(app *framework.App) error {
 		server := NewServer(func(request contracts.RequestContract) container.Interface {
 			ioc := app.Container().Clone()
 			for _, s := range services {
-				if hs, ok := s.(HttpService); ok {
+				if hs, ok := s.(HttpBoundle); ok {
 					hs.Lifetime(ioc, request)
 				}
 			}
