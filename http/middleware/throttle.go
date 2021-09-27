@@ -8,9 +8,9 @@ import (
 	"github.com/enorith/cache"
 	"github.com/enorith/exception"
 	c "github.com/enorith/framework/cache"
-	"github.com/enorith/http"
 	"github.com/enorith/http/content"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/http/pipeline"
 )
 
 type ThrottleRequests struct {
@@ -19,7 +19,7 @@ type ThrottleRequests struct {
 	max     int
 }
 
-func (t *ThrottleRequests) Handle(r contracts.RequestContract, next http.PipeHandler) contracts.ResponseContract {
+func (t *ThrottleRequests) Handle(r contracts.RequestContract, next pipeline.PipeHandler) contracts.ResponseContract {
 	resp := next(r)
 	key := t.requestSignature(r)
 

@@ -74,7 +74,7 @@ func (s *Service) Register(app *framework.App) error {
 
 	gormdb.DefaultManager.Using(s.config.Default)
 
-	if Migrator != nil {
+	if s.config.AuthMigrate && Migrator != nil {
 		if tx, e := gormdb.DefaultManager.GetConnection(); e == nil {
 			Migrator(tx)
 		} else {

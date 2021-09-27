@@ -17,6 +17,7 @@ type Config struct {
 	//      })
 	//
 	ImplicitInjection bool `yaml:"implicit_injection"`
+	AuthMigrate       bool `yaml:"migrate"`
 }
 
 var (
