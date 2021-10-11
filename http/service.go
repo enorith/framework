@@ -65,19 +65,26 @@ func (s *Service) Register(app *framework.App) error {
 
 		return rules.NewUnique(tx, args[0], field), nil
 	})
+	config := app.GetConfig()
+	services := app.Services()
+	kernel := h.NewKernel(func(request contracts.RequestContract) container.Interface {
+		ioc := app.Container().Clone()
+		for _, s := range services {
+			if hs, ok := s.(HttpBoundle); ok {
+				hs.Lifetime(ioc, request)
+			}
+		}
+		return ioc
+	}, config.Debug)
+	server := NewServer(kernel)
+
+	app.Bind(func(ioc container.Interface) {
+		ioc.BindFunc(&h.Kernel{}, func(c container.Interface) (interface{}, error) {
+			return kernel, nil
+		}, true)
+	})
 
 	app.Daemon(func(done chan struct{}) {
-		config := app.GetConfig()
-		services := app.Services()
-		server := NewServer(func(request contracts.RequestContract) container.Interface {
-			ioc := app.Container().Clone()
-			for _, s := range services {
-				if hs, ok := s.(HttpBoundle); ok {
-					hs.Lifetime(ioc, request)
-				}
-			}
-			return ioc
-		}, config.Debug)
 		server.Serve(fmt.Sprintf(":%d", s.config.Port), func(rw *router.Wrapper, k *h.Kernel) {
 			k.OutputLog = s.config.AccessLog
 			for _, s := range services {

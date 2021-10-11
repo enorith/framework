@@ -82,9 +82,7 @@ func (s *Server) GetFastHttpServer(kernel *h.Kernel) *fasthttp.Server {
 	}
 }
 
-func NewServer(cr h.ContainerRegister, debug bool) *Server {
-	k := h.NewKernel(cr, debug)
-
+func NewServer(k *h.Kernel) *Server {
 	return &Server{k: k}
 }
 

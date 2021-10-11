@@ -49,11 +49,17 @@ type App struct {
 	defers          []func()
 	daemons         []DaemonFn
 	container       container.Interface
+	handlers        []interface{}
 }
 
 //Bind instance to global ioc-container
 func (app *App) Bind(bf BindFunc) {
 	bf(app.container)
+}
+
+//Resolving call fn after all services registered, fn paramters can be injected from global ioc-container
+func (app *App) Resolving(fn interface{}) {
+	app.handlers = append(app.handlers, fn)
 }
 
 //Container get global ioc-container
@@ -104,6 +110,10 @@ func (app *App) Bootstrap() error {
 		if e != nil {
 			return e
 		}
+	}
+
+	for _, fn := range app.handlers {
+		app.container.Invoke(fn)
 	}
 
 	return nil
@@ -204,6 +214,7 @@ func NewApp(configFs fs.FS) *App {
 		defers:          make([]func(), 0),
 		daemons:         make([]DaemonFn, 0),
 		container:       container.New(),
+		handlers:        make([]interface{}, 0),
 	}
 	app.Configure(AppConfigName, &app.config)
 
