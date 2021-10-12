@@ -15,7 +15,7 @@ connections:
   nsq:
     driver: nsq # support: nsq, mem
     config:
-      nsqd: localhost:4150
+      nsqd: wsl.local:4150
       #nsqlookupd: localhost:4161
   mem:
     driver: mem

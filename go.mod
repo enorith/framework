@@ -3,7 +3,7 @@ module github.com/enorith/framework
 go 1.16
 
 require (
-	github.com/enorith/authenticate v0.0.0-20210819101714-075985a68865
+	github.com/enorith/authenticate v0.0.1
 	github.com/enorith/cache v0.0.5
 	github.com/enorith/config v0.0.3
 	github.com/enorith/container v0.0.17
