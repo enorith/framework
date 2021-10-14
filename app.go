@@ -100,6 +100,7 @@ func (app *App) Bootstrap() error {
 	if app.config.Timezone != "" {
 		loc, e := time.LoadLocation(app.config.Timezone)
 		if e == nil {
+			time.Local = loc
 			carbon.Timezone = loc
 		}
 	}
