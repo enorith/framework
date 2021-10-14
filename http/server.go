@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	net "net/http"
+	"net"
+	nh "net/http"
 	"time"
 
 	h "github.com/enorith/http"
@@ -29,8 +30,13 @@ func (s *Server) serveFastHttp(addr string, done chan struct{}) {
 	srv := s.GetFastHttpServer(s.k)
 
 	go func() {
-		if err := srv.ListenAndServe(addr); err != nil {
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
 			log.Fatalf("listen %s error: %v", addr, err)
+		}
+
+		if err := srv.Serve(ln); err != nil {
+			log.Fatalf("serve %s error: %v", addr, err)
 		}
 	}()
 	log.Printf("%s served at [%s]", logPrefix("fasthttp"), addr)
@@ -43,14 +49,14 @@ func (s *Server) serveFastHttp(addr string, done chan struct{}) {
 }
 
 func (s *Server) serveNetHttp(addr string, done chan struct{}) {
-	srv := net.Server{
+	srv := nh.Server{
 		Addr:         addr,
 		Handler:      s.k,
 		ReadTimeout:  h.ReadTimeout,
 		WriteTimeout: h.WriteTimeout,
 	}
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != net.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && err != nh.ErrServerClosed {
 			log.Fatalf("listen %s error: %v", addr, err)
 		}
 	}()
