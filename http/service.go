@@ -124,9 +124,10 @@ func (s *Service) Register(app *framework.App) error {
 			if e == nil {
 				h.RequestLogger = func(request contracts.RequestContract, statusCode int, start time.Time) {
 
+					duration := time.Since(start)
 					accessLogger.WithOptions(zap.WithCaller(false)).Info("",
 						zap.String("remote", request.RemoteAddr()),
-						zap.Duration("latency", time.Since(start)),
+						zap.String("latency", fmt.Sprintf("%.6fms", float64(duration)/float64(time.Millisecond))),
 						zap.String("path", string(request.GetUri())),
 						zap.Int("status_code", statusCode))
 				}
