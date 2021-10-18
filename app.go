@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"os/signal"
@@ -11,7 +12,9 @@ import (
 	"github.com/enorith/config"
 	"github.com/enorith/container"
 	"github.com/enorith/http/router"
+	"github.com/enorith/logging"
 	"github.com/enorith/supports/carbon"
+	"go.uber.org/zap"
 )
 
 type RouterRegister func(rw *router.Wrapper)
@@ -50,6 +53,7 @@ type App struct {
 	daemons         []DaemonFn
 	container       container.Interface
 	handlers        []interface{}
+	logDir          string
 }
 
 //Bind instance to global ioc-container
@@ -96,7 +100,17 @@ func (app *App) GetConfig() Config {
 }
 
 //Bootstrap application, will call before app run
-func (app *App) Bootstrap() error {
+func (app *App) Bootstrap() (e error) {
+	defer func() {
+		if x := recover(); x != nil {
+			if err, ok := x.(error); ok {
+				e = err
+			}
+			if errStr, ok := x.(string); ok {
+				e = errors.New(errStr)
+			}
+		}
+	}()
 	if app.config.Timezone != "" {
 		loc, e := time.LoadLocation(app.config.Timezone)
 		if e == nil {
@@ -105,6 +119,7 @@ func (app *App) Bootstrap() error {
 		}
 	}
 	app.Register(app.configService)
+	NewLoggingService(app.logDir).Register(app)
 	// app.configService.Register(app)
 	for _, s := range app.services {
 		e := s.Register(app)
@@ -124,6 +139,7 @@ func (app *App) Bootstrap() error {
 func (app *App) Run() error {
 	e := app.Bootstrap()
 	if e != nil {
+		logError(e)
 		return e
 	}
 	wg := new(sync.WaitGroup)
@@ -206,7 +222,7 @@ func (app *App) Services() []Service {
 }
 
 //NewApp: new application instance
-func NewApp(configFs fs.FS) *App {
+func NewApp(configFs fs.FS, logDir string) *App {
 	app := &App{
 		configFs:        configFs,
 		services:        make([]Service, 0),
@@ -216,9 +232,19 @@ func NewApp(configFs fs.FS) *App {
 		daemons:         make([]DaemonFn, 0),
 		container:       container.New(),
 		handlers:        make([]interface{}, 0),
+		logDir:          logDir,
 	}
 	app.Configure(AppConfigName, &app.config)
 
 	AppConfig = app.config
 	return app
+}
+
+func logError(e error) {
+	if e != nil {
+		logger, err := logging.DefaultManager.Channel()
+		if err == nil {
+			logger.Error(e.Error(), zap.Error(e))
+		}
+	}
 }

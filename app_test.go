@@ -25,7 +25,7 @@ func (up UserProvider) Attempt(r contracts.RequestContract) (authenticate.User, 
 }
 
 func TestBootstrap(t *testing.T) {
-	app := framework.NewApp(os.DirFS("test_assets/config"))
+	app := framework.NewApp(os.DirFS("test_assets/config"), "tmp/logs")
 	app.Register(cache.Service{})
 	app.Register(database.NewService())
 	app.Register(redis.Service{})

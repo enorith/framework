@@ -1,33 +1,32 @@
-package logging
+package framework
 
 import (
 	"github.com/enorith/container"
-	"github.com/enorith/framework"
 	"github.com/enorith/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-type Config struct {
+type LoggingConfig struct {
 	Default  string `yaml:"default" env:"LOGGING_CHANNEL" default:"default"`
-	Channels map[string]ChannelConfig
+	Channels map[string]LogChannelConfig
 }
 
-type ChannelConfig struct {
+type LogChannelConfig struct {
 	Outputs    []string `yaml:"outputs"`
 	Errouts    []string `yaml:"errouts"`
 	TimeFormat string   `yaml:"time_format" default:"2006-01-02T15:04:05.999"`
 }
 
-type Service struct {
+type LoggingService struct {
 	baseDir string
 }
 
 //Register service when app starting, before http server start
 // you can configure service, prepare global vars etc.
 // running at main goroutine
-func (s *Service) Register(app *framework.App) error {
-	var conf Config
+func (s *LoggingService) Register(app *App) error {
+	var conf LoggingConfig
 	app.Configure("logging", &conf)
 
 	logging.WithDefaults(logging.Config{
@@ -64,8 +63,8 @@ func (s *Service) Register(app *framework.App) error {
 	return nil
 }
 
-func NewService(baseDir string) *Service {
-	return &Service{
+func NewLoggingService(baseDir string) *LoggingService {
+	return &LoggingService{
 		baseDir: baseDir,
 	}
 }
