@@ -1,0 +1,11 @@
+default: default
+channels: 
+  default:
+    outputs:
+      - rotate:///enorith.log # schema supports: rotate, single, file, stdout, stderr
+  single:
+    outputs:
+      - single:///enorith.log
+  http:
+    outputs:
+      - rotate:///http.log

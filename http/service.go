@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
@@ -9,14 +10,20 @@ import (
 	"github.com/enorith/gormdb"
 	h "github.com/enorith/http"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/http/errors"
 	"github.com/enorith/http/router"
 	"github.com/enorith/http/validation"
 	"github.com/enorith/http/validation/rule"
+	"github.com/enorith/logging"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type Config struct {
-	Port      int  `yaml:"port" env:"HTTP_PORT" default:"8000"`
-	AccessLog bool `yaml:"access_log" env:"HTTP_ACCESS_LOG" default:"false"`
+	Port             int    `yaml:"port" env:"HTTP_PORT" default:"8000"`
+	AccessLog        bool   `yaml:"access_log" env:"HTTP_ACCESS_LOG" default:"false"`
+	ErrorLogChannel  string `yaml:"error_log_channel" default:"default"`
+	AccessLogChannel string `yaml:"access_log_channel"`
 }
 
 type HttpBoundle interface {
@@ -98,9 +105,45 @@ func (s *Service) Register(app *framework.App) error {
 		}, done)
 	})
 
+	app.Resolving(func(lm *logging.Manager) {
+		logger, e := lm.Channel(s.config.ErrorLogChannel)
+		if e == nil {
+			kernel.SetErrorHandler(&errors.StandardErrorHandler{
+				Debug: config.Debug,
+				Callback: func(ed errors.ErrorData) {
+					if ed.Fatal {
+						logger.WithOptions(zap.WithCaller(false),
+							zap.AddStacktrace(loggerTraceEnabler{})).Error(ed.Message, zap.Any("trace", ed.Traces),
+							zap.String("caller", fmt.Sprintf("%s:%d", ed.File, ed.Line)))
+					}
+				},
+			})
+		}
+		if s.config.AccessLogChannel != "" {
+			accessLogger, e := lm.Channel(s.config.AccessLogChannel)
+			if e == nil {
+				h.RequestLogger = func(request contracts.RequestContract, statusCode int, start time.Time) {
+
+					accessLogger.WithOptions(zap.WithCaller(false)).Info("",
+						zap.String("remote", request.RemoteAddr()),
+						zap.String("latency", fmt.Sprintf("%s", time.Since(start))),
+						zap.String("path", string(request.GetUri())),
+						zap.Int("status_code", statusCode))
+				}
+			}
+		}
+	})
+
 	return nil
 }
 
 func NewService() *Service {
 	return &Service{}
+}
+
+type loggerTraceEnabler struct {
+}
+
+func (loggerTraceEnabler) Enabled(zapcore.Level) bool {
+	return false
 }
