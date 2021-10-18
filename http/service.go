@@ -126,7 +126,7 @@ func (s *Service) Register(app *framework.App) error {
 
 					accessLogger.WithOptions(zap.WithCaller(false)).Info("",
 						zap.String("remote", request.RemoteAddr()),
-						zap.String("latency", fmt.Sprintf("%s", time.Since(start))),
+						zap.Duration("latency", time.Since(start)),
 						zap.String("path", string(request.GetUri())),
 						zap.Int("status_code", statusCode))
 				}
