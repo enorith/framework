@@ -2,15 +2,17 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"sync"
+	"time"
 
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
 	"github.com/enorith/gormdb"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/logging"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type DriverRegister func(dsn string) gorm.Dialector
@@ -49,6 +51,7 @@ type Service struct {
 func (s *Service) Register(app *framework.App) error {
 	app.Configure("database", &s.config)
 	WithDefaults()
+	log, _ := logging.DefaultManager.Channel(s.config.LogChannel)
 
 	for name, cc := range s.config.Connections {
 		gormdb.DefaultManager.Register(name, func() (*gorm.DB, error) {
@@ -56,7 +59,15 @@ func (s *Service) Register(app *framework.App) error {
 			if !ok {
 				return nil, fmt.Errorf("unregistered database driver [%s]", cc.Driver)
 			}
-			tx, e := gorm.Open(register(cc.DSN))
+			conf := &gorm.Config{}
+			if log != nil {
+				conf.Logger = &Logger{
+					logLevel:      logger.Info,
+					logger:        log,
+					SlowThreshold: 300 * time.Millisecond,
+				}
+			}
+			tx, e := gorm.Open(register(cc.DSN), conf)
 			if e != nil {
 				return nil, e
 			}
@@ -77,8 +88,8 @@ func (s *Service) Register(app *framework.App) error {
 	if s.config.AuthMigrate && Migrator != nil {
 		if tx, e := gormdb.DefaultManager.GetConnection(); e == nil {
 			Migrator(tx)
-		} else {
-			log.Printf("[database] migration error %v", e)
+		} else if log != nil {
+			log.Error("[database] migration error %v")
 		}
 	}
 

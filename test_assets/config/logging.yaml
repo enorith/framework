@@ -9,3 +9,6 @@ channels:
   http:
     outputs:
       - rotate:///http.log
+  database:
+    outputs:
+      - rotate:///database.log

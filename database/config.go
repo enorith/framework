@@ -16,8 +16,9 @@ type Config struct {
 	//			return user
 	//      })
 	//
-	ImplicitInjection bool `yaml:"implicit_injection"`
-	AuthMigrate       bool `yaml:"migrate"`
+	ImplicitInjection bool   `yaml:"implicit_injection"`
+	AuthMigrate       bool   `yaml:"migrate"`
+	LogChannel        string `yaml:"log_channel"`
 }
 
 var (

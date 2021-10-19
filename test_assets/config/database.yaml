@@ -7,3 +7,4 @@ connections:
 implicit_injection: true
 # migrate table
 migrate: true
+log_channel: database
