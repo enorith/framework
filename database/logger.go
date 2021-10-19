@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -63,11 +62,4 @@ func (l *Logger) Trace(ctx context.Context, begin time.Time, fc func() (sql stri
 			log.Info("", fields...)
 		}
 	}
-}
-
-type loggerTraceEnabler struct {
-}
-
-func (loggerTraceEnabler) Enabled(zapcore.Level) bool {
-	return false
 }
