@@ -27,17 +27,17 @@ func (s *Service) Register(app *framework.App) error {
 	app.Daemon(func(exit chan struct{}) {
 		lis, err := net.Listen("unix", file)
 		if err != nil {
-			log.Println("[conosole] socket listening error ", err)
+			log.Println("[console] socket listening error ", err)
 			return
 		}
-		log.Printf("[conosole] socket listening %s", file)
+		log.Printf("[console] socket listening %s", file)
 		go func() {
 			for {
 				conn, err := lis.Accept()
 				reader := bufio.NewReader(conn)
 
 				if err != nil {
-					log.Println("[conosole] socket accept error ", err)
+					log.Println("[console] socket accept error ", err)
 					return
 				}
 				go func() {
@@ -45,7 +45,7 @@ func (s *Service) Register(app *framework.App) error {
 					for {
 						data, e := reader.ReadBytes('\n')
 						if e == nil {
-							log.Printf("[conosole] socket accept %s", data)
+							log.Printf("[console] socket accept %s", data)
 							conn.Write([]byte(fmt.Sprintf("accepted [%s]\n", bytes.TrimSpace(data))))
 						}
 					}
@@ -55,7 +55,7 @@ func (s *Service) Register(app *framework.App) error {
 		}()
 
 		<-exit
-		log.Printf("[conosole] socket closing")
+		log.Printf("[console] socket closing")
 		lis.Close()
 	})
 	return nil
