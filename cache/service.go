@@ -84,8 +84,9 @@ func (s Service) registerStores(cc CacheConfig) {
 	})
 
 	for k, sc := range cc.Stores {
+		config := sc
 		c.RegisterDriver(k, func() (c.Repository, error) {
-			return ResolveDriver(sc.Driver, sc.Config)
+			return ResolveDriver(config.Driver, config.Config)
 		})
 	}
 }

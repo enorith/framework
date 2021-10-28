@@ -54,10 +54,11 @@ func (s *Service) Register(app *framework.App) error {
 	log, _ := logging.DefaultManager.Channel(s.config.LogChannel)
 
 	for name, cc := range s.config.Connections {
+		config := cc
 		gormdb.DefaultManager.Register(name, func() (*gorm.DB, error) {
-			register, ok := GetDriverRegister(cc.Driver)
+			register, ok := GetDriverRegister(config.Driver)
 			if !ok {
-				return nil, fmt.Errorf("unregistered database driver [%s]", cc.Driver)
+				return nil, fmt.Errorf("unregistered database driver [%s]", config.Driver)
 			}
 			conf := &gorm.Config{}
 			if log != nil {

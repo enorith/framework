@@ -16,3 +16,4 @@ debug
 .DS_Store
 .vscode
 tmp
+*.sock
