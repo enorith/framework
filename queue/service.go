@@ -2,13 +2,13 @@ package queue
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"sync"
 
 	"github.com/enorith/config"
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
+	"github.com/enorith/logging"
 	"github.com/enorith/queue"
 	"github.com/enorith/queue/connections"
 	c "github.com/enorith/queue/contracts"
@@ -113,12 +113,12 @@ func (s *Service) withInvoker(app *framework.App) {
 
 			v, e := ioc.Instance(argType)
 			if e != nil {
-				log.Printf("[queue] invoke handler error: %v, try to instance %s", e, argType)
+				logging.Infof("[queue] invoke handler error: %v, try to instance %s", e, argType)
 				return
 			}
 
 			if !v.IsValid() {
-				log.Printf("[queue] invoke handler error: invalid instance, try to instance %s", argType)
+				logging.Infof("[queue] invoke handler error: invalid instance, try to instance %s", argType)
 				return
 			}
 			params = append(params, v)

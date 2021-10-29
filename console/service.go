@@ -4,15 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
 
 	"github.com/enorith/framework"
+	"github.com/enorith/logging"
 )
 
 type Config struct {
+	Socket string `yaml:"socket"`
 }
 
 type Service struct {
@@ -22,30 +23,36 @@ type Service struct {
 // you can configure service, prepare global vars etc.
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
-	wd, _ := os.Getwd()
-	file := filepath.Join(wd, "enorith.sock")
+	var config Config
+	app.Configure("console", &config)
+	if config.Socket == "" {
+		wd, _ := os.Getwd()
+		config.Socket = filepath.Join(wd, "enorith.sock")
+	}
+
 	app.Daemon(func(exit chan struct{}) {
-		lis, err := net.Listen("unix", file)
+		lis, err := net.Listen("unix", config.Socket)
 		if err != nil {
-			log.Println("[console] socket listening error ", err)
+			logging.Infof("[console] socket listening error %v", err)
 			return
 		}
-		log.Printf("[console] socket listening %s", file)
+		logging.Infof("[console] socket listening %s", config.Socket)
 		go func() {
 			for {
 				conn, err := lis.Accept()
 				reader := bufio.NewReader(conn)
 
 				if err != nil {
-					log.Println("[console] socket accept error ", err)
+					logging.Infof("[console] socket accept error %v", err)
 					return
 				}
 				go func() {
 					defer conn.Close()
 					for {
+
 						data, e := reader.ReadBytes('\n')
 						if e == nil {
-							log.Printf("[console] socket accept %s", data)
+							logging.Infof("[console] socket accept %s", data)
 							conn.Write([]byte(fmt.Sprintf("accepted [%s]\n", bytes.TrimSpace(data))))
 						}
 					}
@@ -55,7 +62,7 @@ func (s *Service) Register(app *framework.App) error {
 		}()
 
 		<-exit
-		log.Printf("[console] socket closing")
+		logging.Info("[console] socket closing")
 		lis.Close()
 	})
 	return nil
