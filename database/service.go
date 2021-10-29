@@ -23,6 +23,8 @@ var (
 	driverRegisters = make(map[string]DriverRegister)
 	mu              sync.RWMutex
 	DefaultPageSize = 15
+	PageKey         = "page"
+	PageSizeKey     = "per_page"
 )
 
 //GetDriverRegister: get registerd driver
@@ -109,8 +111,8 @@ func (s *Service) Register(app *framework.App) error {
 func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
 
 	ioc.BindFunc(&gormdb.Paginator{}, func(c container.Interface) (interface{}, error) {
-		page, _ := request.GetInt("page")
-		perPage, _ := request.GetInt("per_page")
+		page, _ := request.GetInt(PageKey)
+		perPage, _ := request.GetInt(PageSizeKey)
 
 		if perPage < 1 {
 			perPage = DefaultPageSize
