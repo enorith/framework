@@ -15,6 +15,7 @@ type LoggingConfig struct {
 type LogChannelConfig struct {
 	Outputs    []string `yaml:"outputs"`
 	Errouts    []string `yaml:"errouts"`
+	Encoding   string   `yaml:"encoding" default:"json"`
 	TimeFormat string   `yaml:"time_format" default:"2006-01-02T15:04:05.999"`
 }
 
@@ -43,8 +44,12 @@ func (s *LoggingService) Register(app *App) error {
 			if cr.TimeFormat == "" {
 				cr.TimeFormat = "2006-01-02T15:04:05.999"
 			}
+			if cr.Encoding == "" {
+				cr.Encoding = "json"
+			}
 			conf.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(cr.TimeFormat)
 			conf.EncoderConfig.StacktraceKey = "trace"
+			conf.Encoding = cr.Encoding
 
 			return conf.Build()
 		})
