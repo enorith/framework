@@ -15,7 +15,7 @@ require (
 	github.com/enorith/queue v0.0.5
 	github.com/enorith/redis v1.0.0
 	github.com/enorith/supports v0.0.12
-	github.com/go-co-op/gocron v1.11.0 // indirect
+	github.com/go-co-op/gocron v1.11.0
 	github.com/go-redis/cache/v8 v8.4.2
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/patrickmn/go-cache v2.1.0+incompatible

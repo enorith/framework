@@ -63,3 +63,7 @@ func (l *Logger) Trace(ctx context.Context, begin time.Time, fc func() (sql stri
 		}
 	}
 }
+
+func NewLogger(logger *zap.Logger, level logger.LogLevel) *Logger {
+	return &Logger{logLevel: level, logger: logger, SlowThreshold: 200 * time.Millisecond}
+}
