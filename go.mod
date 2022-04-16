@@ -8,7 +8,7 @@ require (
 	github.com/enorith/config v0.0.3
 	github.com/enorith/container v0.0.18
 	github.com/enorith/exception v0.0.2
-	github.com/enorith/gormdb v0.0.0-20210826072414-e6f6875230a7
+	github.com/enorith/gormdb v0.0.3
 	github.com/enorith/http v1.0.3
 	github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e
 	github.com/enorith/logging v0.0.5
