@@ -27,7 +27,7 @@ func (s *LangService) Register(app *framework.App) error {
 			lang := d.Name()
 			if d.IsDir() {
 				langPath := d.Name()
-				del, e := fs.ReadDir(s.fs, langPath)
+				del, e := fs.ReadDir(s.fs, Dir+"/"+langPath)
 				if e != nil {
 					return e
 				}
@@ -36,7 +36,7 @@ func (s *LangService) Register(app *framework.App) error {
 						filename := langF.Name()
 						key := strings.Split(filename, ".")[0]
 						var data map[string]string
-						config.UnmarshalFS(s.fs, langPath+"/"+filename, &data)
+						config.UnmarshalFS(s.fs, Dir+"/"+langPath+"/"+filename, &data)
 						language.Register(key, lang, data)
 					}
 				}
