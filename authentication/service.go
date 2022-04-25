@@ -1,17 +1,16 @@
 package authentication
 
 import (
-	"reflect"
-
 	"github.com/enorith/authenticate"
 	"github.com/enorith/authenticate/jwt"
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
 	"github.com/enorith/framework/authentication/guards"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/supports/reflection"
 )
 
-var GuardType = reflect.TypeOf((*authenticate.Guard)(nil)).Elem()
+var GuardType = reflection.InterfaceType[authenticate.Guard]()
 
 type Service struct {
 	config Config

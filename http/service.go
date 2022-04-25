@@ -9,6 +9,7 @@ import (
 	"github.com/enorith/framework/http/rules"
 	"github.com/enorith/gormdb"
 	h "github.com/enorith/http"
+	"github.com/enorith/http/content"
 	"github.com/enorith/http/contracts"
 	"github.com/enorith/http/errors"
 	"github.com/enorith/http/router"
@@ -20,10 +21,12 @@ import (
 )
 
 type Config struct {
-	Port             int    `yaml:"port" env:"HTTP_PORT" default:"8000"`
-	AccessLog        bool   `yaml:"access_log" env:"HTTP_ACCESS_LOG" default:"false"`
-	ErrorLogChannel  string `yaml:"error_log_channel" default:"default"`
-	AccessLogChannel string `yaml:"access_log_channel"`
+	Port                int      `yaml:"port" env:"HTTP_PORT" default:"8000"`
+	AccessLog           bool     `yaml:"access_log" env:"HTTP_ACCESS_LOG" default:"false"`
+	ErrorLogChannel     string   `yaml:"error_log_channel" default:"default"`
+	AccessLogChannel    string   `yaml:"access_log_channel"`
+	TrustedProxies      []string `yaml:"trusted_proxies"`
+	TrustedProxyHeaders []string `yaml:"trusted_proxy_headers"`
 }
 
 type HttpBoundle interface {
@@ -54,6 +57,8 @@ func (s *Service) WithRoutes(rg func(rw *router.Wrapper)) *Service {
 func (s *Service) Register(app *framework.App) error {
 
 	app.Configure("http", &s.config)
+	content.SetTrustedProxies(s.config.TrustedProxies...)
+	content.SetTrustedProxyHeaderSets(s.config.TrustedProxyHeaders...)
 	validation.Register("unique", func(attribute string, r contracts.InputSource, args ...string) (rule.Rule, error) {
 		var field string
 		if len(args) == 0 {

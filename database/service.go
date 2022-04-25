@@ -10,6 +10,7 @@ import (
 	"github.com/enorith/gormdb"
 	"github.com/enorith/http/contracts"
 	"github.com/enorith/logging"
+	"github.com/enorith/supports/reflection"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -25,6 +26,7 @@ var (
 	DefaultPageSize = 15
 	PageKey         = "page"
 	PageSizeKey     = "per_page"
+	PageParamsType  = reflection.InterfaceType[PageParams]()
 )
 
 //GetDriverRegister: get registerd driver
@@ -120,6 +122,10 @@ func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestCon
 
 		return gormdb.NewPaginator(page, perPage), nil
 	}, false)
+
+	ioc.BindFunc(PageParamsType, func(c container.Interface) (interface{}, error) {
+		return RequestPageParams{request: request}, nil
+	}, true)
 
 	ioc.WithInjector(Injector{r: request, c: s.config, ioc: ioc})
 }
