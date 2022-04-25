@@ -27,7 +27,7 @@ func (s Service) Register(app *framework.App) error {
 
 	app.Daemon(func(exit chan struct{}) {
 		Scheduler.StartAsync()
-		log.Println("[cron] startted")
+		log.Println("[cron] started")
 		<-exit
 		Scheduler.Stop()
 		log.Println("[cron] stopped")
