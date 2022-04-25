@@ -21,9 +21,14 @@ func DispatchAfter(payload interface{}, delay time.Duration) error {
 	return queue.DefaultDispatcher.After(delay).Dispatch(payload)
 }
 
-//DispatchOn queue connection
+//DispatchOn display payload to queue connection
 func DispatchOn(payload interface{}, on string) error {
 	return queue.DefaultDispatcher.On(on).Dispatch(payload)
+}
+
+//DispatchOnAfter display payload to queue connection, handle after delay
+func DispatchOnAfter(payload interface{}, on string, delay time.Duration) error {
+	return queue.DefaultDispatcher.On(on).After(delay).Dispatch(payload)
 }
 
 //RegisterHandler register queue job handler, automaticly listen job
