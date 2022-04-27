@@ -9,7 +9,7 @@ require (
 	github.com/enorith/container v0.0.18
 	github.com/enorith/exception v0.0.2
 	github.com/enorith/gormdb v0.1.0
-	github.com/enorith/http v1.1.0
+	github.com/enorith/http v1.1.2
 	github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e
 	github.com/enorith/logging v0.0.5
 	github.com/enorith/queue v0.0.5

@@ -79,19 +79,25 @@ func (app *App) Register(service Service) *App {
 }
 
 //Configure: load config instance and add to config service
-func (app *App) Configure(name string, value interface{}) *App {
-	config.UnmarshalFS(app.configFs, name+ConfigExt, value)
+func (app *App) Configure(name string, value interface{}) error {
+	err := config.UnmarshalFS(app.configFs, name+ConfigExt, value)
+	if err != nil {
+		return err
+	}
 	app.configService.Add(name, value)
 
-	return app
+	return nil
 }
 
 //ConfigureFS: load config from filesystem
-func (app *App) ConfigureFS(fs fs.FS, name string, value interface{}) *App {
-	config.UnmarshalFS(fs, name+ConfigExt, value)
+func (app *App) ConfigureFS(fs fs.FS, name string, value interface{}) error {
+	err := config.UnmarshalFS(fs, name+ConfigExt, value)
+	if err != nil {
+		return err
+	}
 	app.configService.Add(name, value)
 
-	return app
+	return nil
 }
 
 //GetConfig: get app config instance
