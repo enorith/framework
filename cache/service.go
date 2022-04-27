@@ -21,6 +21,7 @@ var RepositoryType = reflect.TypeOf((*c.Repository)(nil)).Elem()
 
 type StoreConfig struct {
 	Driver string    `yaml:"driver"`
+	Prefix string    `yaml:"prefix"`
 	Config yaml.Node `yaml:"config"`
 }
 
@@ -57,11 +58,11 @@ func (s Service) Register(app *framework.App) error {
 }
 
 func (s Service) registerStores(cc CacheConfig) {
-	Resolve("go_cache", func(config yaml.Node) (c.Repository, error) {
-		return c.NewGoCache(gc.New(c.DefaultExpiration, c.CleanupInterval)), nil
+	Resolve("go_cache", func(config yaml.Node, sc StoreConfig) (c.Repository, error) {
+		return c.NewGoCache(gc.New(c.DefaultExpiration, c.CleanupInterval), sc.Prefix), nil
 	})
 
-	Resolve("redis", func(conf yaml.Node) (c.Repository, error) {
+	Resolve("redis", func(conf yaml.Node, sc StoreConfig) (c.Repository, error) {
 		var rc RedisConfig
 		config.UnmarshalNode(conf, &rc)
 		var ring redis.UniversalClient
@@ -80,13 +81,13 @@ func (s Service) registerStores(cc CacheConfig) {
 			Redis:        ring,
 			LocalCache:   cache.NewTinyLFU(1000, time.Minute),
 			StatsEnabled: false,
-		}), nil
+		}, sc.Prefix), nil
 	})
 
 	for k, sc := range cc.Stores {
 		config := sc
 		c.RegisterDriver(k, func() (c.Repository, error) {
-			return ResolveDriver(config.Driver, config.Config)
+			return ResolveDriver(config.Driver, config.Config, config)
 		})
 	}
 }

@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/enorith/authenticate v0.0.1
-	github.com/enorith/cache v0.0.5
+	github.com/enorith/cache v0.0.7
 	github.com/enorith/config v0.0.3
 	github.com/enorith/container v0.0.18
 	github.com/enorith/exception v0.0.2
@@ -14,6 +14,7 @@ require (
 	github.com/enorith/logging v0.0.5
 	github.com/enorith/queue v0.0.5
 	github.com/enorith/redis v1.0.0
+	github.com/enorith/session v0.0.1
 	github.com/enorith/supports v0.1.2
 	github.com/go-co-op/gocron v1.11.0
 	github.com/go-redis/cache/v8 v8.4.2
@@ -47,7 +48,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/vmihailenco/go-tinylfu v0.2.1 // indirect
-	github.com/vmihailenco/msgpack/v5 v5.3.4 // indirect
+	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect

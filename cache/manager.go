@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type DriverResolver func(conf yaml.Node) (cache.Repository, error)
+type DriverResolver func(conf yaml.Node, sc StoreConfig) (cache.Repository, error)
 
 var (
 	driverResolvers = make(map[string]DriverResolver)
@@ -21,11 +21,11 @@ func Resolve(name string, dr DriverResolver) {
 	driverResolvers[name] = dr
 }
 
-func ResolveDriver(name string, config yaml.Node) (cache.Repository, error) {
+func ResolveDriver(name string, config yaml.Node, sc StoreConfig) (cache.Repository, error) {
 	mu.RLock()
 	defer mu.RUnlock()
 	if dr, ok := driverResolvers[name]; ok {
-		return dr(config)
+		return dr(config, sc)
 	}
 
 	return nil, fmt.Errorf("[cache] unregister resolver %s", name)
