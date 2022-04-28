@@ -9,4 +9,7 @@ connections:
       - 127.0.0.1:6379
     database: 1
     perfix: 'cache:'
-perfix: 'enorith:'
+  session:
+    addrs:
+      - 127.0.0.1:6379
+    database: 2

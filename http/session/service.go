@@ -1,40 +1,71 @@
 package session
 
 import (
+	"errors"
+	"fmt"
+	"log"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
+	"github.com/enorith/framework/cache"
 	"github.com/enorith/http/contracts"
 	"github.com/enorith/session"
 	"github.com/enorith/session/handlers"
+	"github.com/enorith/supports/reflection"
+	"github.com/enorith/supports/str"
 )
+
+type HandlerRegister func() (session.Handler, error)
 
 var (
-	sessionHandlers = make(map[string]session.Handler, 0)
-	mu              sync.RWMutex
+	sessionHandlerRegisters = make(map[string]HandlerRegister, 0)
+	sessionHandlers         = make(map[string]session.Handler, 0)
+	mu                      sync.RWMutex
+)
+var (
+	handlerType = reflection.InterfaceType[session.Handler]()
+	Manager     *session.Manager
 )
 
-func RegisterHandler(name string, handler session.Handler) {
-	mu.Lock()
-	defer mu.Unlock()
-	sessionHandlers[name] = handler
+type SessionID struct {
+	ID string
 }
 
-func GetHandler(name string) (session.Handler, bool) {
-	mu.RLock()
-	defer mu.RUnlock()
-	handler, ok := sessionHandlers[name]
+func RegisterHandler(name string, register HandlerRegister) {
+	mu.Lock()
+	defer mu.Unlock()
+	sessionHandlerRegisters[name] = register
+}
 
-	return handler, ok
+func GetHandler(name string) (session.Handler, error) {
+	mu.RLock()
+	if handler, ok := sessionHandlers[name]; ok {
+		mu.RUnlock()
+		return handler, nil
+	}
+	register, ok := sessionHandlerRegisters[name]
+	mu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("[session] handler (%s) is not registered", name)
+	}
+
+	handler, err := register()
+	if err != nil {
+		return nil, err
+	}
+	sessionHandlers[name] = handler
+	return handler, nil
 }
 
 type Config struct {
 	Default     string `yaml:"default" env:"SESSION_HANDLER" default:"file"`
 	Dir         string `yaml:"dir" default:"sessions"`
-	MaxLifeTime int64  `yaml:"max_life_time"`
-	CacheStore  string `yaml:"cache_store"`
+	MaxLifeTime int64  `yaml:"max_life_time" default:"600"`
+	CacheStore  string `yaml:"cache_store" default:"session"`
+	CookieName  string `yaml:"cookie_name" default:"enorith-session" env:"COOKIE_NAME"`
 }
 
 type Service struct {
@@ -48,22 +79,51 @@ type Service struct {
 func (s *Service) Register(app *framework.App) error {
 	app.Configure("session", &s.config)
 
+	s.registerFileHandler()
+	err := s.registerCacheHandler()
+	if err != nil {
+		return err
+	}
+	handler, err := GetHandler(s.config.Default)
+	if err != nil {
+		return err
+	}
+	Manager = session.NewManager(handler)
+	app.Daemon(func(exit chan struct{}) {
+		log.Println("[session] gc started")
+		for {
+			select {
+			case <-exit:
+				return
+			case <-time.After(time.Second * 3):
+				Manager.GC(time.Duration(s.config.MaxLifeTime) * time.Second)
+			}
+		}
+	})
+
 	return nil
 }
 func (s *Service) registerFileHandler() {
-	RegisterHandler("file", handlers.NewFileSessionHandler(filepath.Join(s.storagePath, s.config.Dir)))
+	RegisterHandler("file", func() (session.Handler, error) {
+		return handlers.NewFileSessionHandler(filepath.Join(s.storagePath, s.config.Dir)), nil
+	})
 }
 
 func (s *Service) registerCacheHandler() error {
-	// if s.config.CacheStore == "" {
-	// 	return errors.New("[session] cache store is not configured")
-	// }
+	RegisterHandler("cache", func() (session.Handler, error) {
+		if s.config.CacheStore == "" {
+			return nil, errors.New("[session] cache store is not configured")
+		}
 
-	// if cache.Default == nil {
-	// 	return errors.New("[session] cache service is not configured")
-	// }
-
-	// RegisterHandler("cache", handlers.NewCacheHandler())
+		if cache.Default == nil {
+			return nil, errors.New("[session] cache service is not configured")
+		}
+		repo, ok := cache.Default.GetRepository(s.config.CacheStore)
+		if !ok {
+			return nil, fmt.Errorf("[session] cache store (%s) is not found", s.config.CacheStore)
+		}
+		return handlers.NewCacheHandler(repo, time.Duration(s.config.MaxLifeTime)*time.Second), nil
+	})
 	return nil
 }
 
@@ -71,6 +131,31 @@ func (s *Service) registerCacheHandler() error {
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request handling
 func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
+	var id string
+	if rc, ok := request.(contracts.WithRequestCookies); ok {
+		cb := rc.CookieByte(s.config.CookieName)
+		if len(cb) > 0 {
+			id = string(cb)
+		} else {
+			id = str.RandString(32)
+		}
+	} else {
+		id = str.RandString(32)
+	}
+
+	ioc.Bind(SessionID{}, SessionID{ID: id}, true)
+
+	ioc.BindFunc(&session.Session{}, func(c container.Interface) (interface{}, error) {
+		return Manager.Get(id), nil
+	}, true)
+
+	ioc.BindFunc("middleware.session", func(c container.Interface) (interface{}, error) {
+		return Middleware{
+			manager:    Manager,
+			id:         id,
+			cookieName: s.config.CookieName,
+		}, nil
+	}, true)
 
 }
 

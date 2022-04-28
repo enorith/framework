@@ -1,0 +1,4 @@
+default: cache # session driver, supports: file, cache
+dir: sessions
+max_life_time: 3600 # in second
+cache_store: session
