@@ -72,20 +72,21 @@ func (s *Service) Register(app *framework.App) error {
 					SlowThreshold: 300 * time.Millisecond,
 				}
 			}
-			tx, e := gorm.Open(register(cc.DSN), conf)
-			if e != nil {
-				return nil, e
-			}
-			db, e := tx.DB()
-			if e != nil {
-				return nil, e
-			}
-			db.SetMaxIdleConns(MaxIdelConns)
-			db.SetMaxOpenConns(MaxOpenConns)
-			db.SetConnMaxIdleTime(MaxIdleTime)
-			db.SetConnMaxLifetime(MaxLifeTime)
-			return tx, e
-		})
+				tx, e := gorm.Open(register(config.DSN), conf)
+				if e != nil {
+					return nil, e
+				}
+				db, e := tx.DB()
+				if e != nil {
+					return nil, e
+				}
+				db.SetMaxIdleConns(MaxIdelConns)
+				db.SetMaxOpenConns(MaxOpenConns)
+				db.SetConnMaxIdleTime(MaxIdleTime)
+				db.SetConnMaxLifetime(MaxLifeTime)
+				return tx, e
+			})
+		}(cc)
 	}
 
 	gormdb.DefaultManager.Using(s.config.Default)
