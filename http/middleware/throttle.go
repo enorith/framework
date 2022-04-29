@@ -95,3 +95,13 @@ func Throttle(minutes int, max int) *ThrottleRequests {
 		max,
 	}
 }
+
+func ThrottleFromCache(cache cache.Repository, minutes int, max int) *ThrottleRequests {
+	return &ThrottleRequests{
+		&Limiter{
+			cache: cache,
+		},
+		minutes,
+		max,
+	}
+}
