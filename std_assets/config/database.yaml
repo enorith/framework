@@ -3,7 +3,9 @@ connections:
   mysql:
     driver: mysql
     dsn: root:root@tcp(127.0.0.1:3306)/enorith
-
+  oracle:
+    driver: oracle
+    dsn: oracle://username:password@host:port/db
 implicit_injection: true
 # migrate table
 migrate: true
