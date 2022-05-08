@@ -51,7 +51,7 @@ func (p Paginator[T]) Paginate(tx *gorm.DB) (*PageResult[T], error) {
 		NewDB: true,
 	})
 	tx.Statement.Dest = targets
-	e := newTx.Table("(?) as `aggragate`", tx).Count(&meta.Total).Error
+	e := newTx.Table("(?) aggragate", tx).Count(&meta.Total).Error
 	if e != nil {
 		return nil, e
 	}
