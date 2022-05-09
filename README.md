@@ -19,5 +19,4 @@
 - [x] Logging (component)
 - [ ] Database (component, using gorm for now, waiting generics) 
 - [ ] CLI application
-- [x] Global service container, copy for request lifetime
-- [ ] Task scheduling
+- [x] Task scheduling
