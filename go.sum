@@ -86,8 +86,8 @@ github.com/enorith/session v0.0.5 h1:qjjApkn/EVGc62YvS80wKPRDtTJdpMnmCZPqUez55pM
 github.com/enorith/session v0.0.5/go.mod h1:CMFT07bhyEyP0PTYP/LOC0MJsgnliLCUplNL4bV+9lA=
 github.com/enorith/supports v0.0.5/go.mod h1:arD7UoIt8BKSkZINkCQmKQjE1sW1BbJugDc+mKuFtyk=
 github.com/enorith/supports v0.0.12/go.mod h1:arD7UoIt8BKSkZINkCQmKQjE1sW1BbJugDc+mKuFtyk=
-github.com/enorith/supports v0.1.5 h1:Qqagsrferz4UaH0oCF0q37tuAHXj9braIkfoMsE8Pkc=
-github.com/enorith/supports v0.1.5/go.mod h1:7ZsljWBG6jxArYXqJ1T08tDes5ZkXkf4eUPxZpxjHUI=
+github.com/enorith/supports v0.1.6 h1:yIRQeEMmvkFHp023wAGryvtNWGyjqbx94gc+YUCnz5o=
+github.com/enorith/supports v0.1.6/go.mod h1:7ZsljWBG6jxArYXqJ1T08tDes5ZkXkf4eUPxZpxjHUI=
 github.com/envoyproxy/go-control-plane v0.6.9/go.mod h1:SBwIajubJHhxtWwsL9s8ss4safvEdbitLhGGK48rN6g=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
