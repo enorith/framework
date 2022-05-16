@@ -31,7 +31,8 @@ func (s *LoggingService) Register(app *App) error {
 	app.Configure("logging", &conf)
 
 	logging.WithDefaults(logging.Config{
-		BaseDir: s.baseDir,
+		BaseDir:  s.baseDir,
+		Fallback: logging.NewStdLogger(),
 	})
 
 	logging.DefaultManager.Using(conf.Default)
