@@ -27,7 +27,7 @@ type StoreConfig struct {
 
 type CacheConfig struct {
 	Store  string                 `yaml:"store" env:"CACHE_DRIVER" default:"go_cache"`
-	Prefix string                 `yaml:"prefix" env:"CACHE_PREFIX" default:""`
+	Prefix string                 `yaml:"prefix" env:"CACHE_PREFIX"`
 	Stores map[string]StoreConfig `yaml:"stores"`
 }
 
@@ -42,7 +42,6 @@ func (s Service) Register(app *framework.App) error {
 
 	var cc CacheConfig
 	app.Configure("cache", &cc)
-	c.KeyPrefix = cc.Prefix
 	s.registerStores(cc)
 	Default = c.NewManager()
 
@@ -59,7 +58,7 @@ func (s Service) Register(app *framework.App) error {
 
 func (s Service) registerStores(cc CacheConfig) {
 	Resolve("go_cache", func(config yaml.Node, sc StoreConfig) (c.Repository, error) {
-		return c.NewGoCache(gc.New(c.DefaultExpiration, c.CleanupInterval), sc.Prefix), nil
+		return c.NewGoCache(gc.New(c.DefaultExpiration, c.CleanupInterval), cc.Prefix+sc.Prefix), nil
 	})
 
 	Resolve("redis", func(conf yaml.Node, sc StoreConfig) (c.Repository, error) {
@@ -81,7 +80,7 @@ func (s Service) registerStores(cc CacheConfig) {
 			Redis:        ring,
 			LocalCache:   cache.NewTinyLFU(1000, time.Minute),
 			StatsEnabled: false,
-		}, sc.Prefix), nil
+		}, cc.Prefix+sc.Prefix), nil
 	})
 
 	for k, sc := range cc.Stores {

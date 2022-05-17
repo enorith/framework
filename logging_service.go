@@ -7,6 +7,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+var (
+	LabelKey = "label"
+)
+
 type LoggingConfig struct {
 	Default  string `yaml:"default" env:"LOGGING_CHANNEL" default:"default"`
 	Channels map[string]LogChannelConfig
@@ -17,6 +21,7 @@ type LogChannelConfig struct {
 	Errouts    []string `yaml:"errouts"`
 	Encoding   string   `yaml:"encoding" default:"json"`
 	TimeFormat string   `yaml:"time_format" default:"2006-01-02T15:04:05.999"`
+	Label      string   `yaml:"label"`
 }
 
 type LoggingService struct {
@@ -51,6 +56,12 @@ func (s *LoggingService) Register(app *App) error {
 			conf.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(cr.TimeFormat)
 			conf.EncoderConfig.StacktraceKey = "trace"
 			conf.Encoding = cr.Encoding
+			fields := make(map[string]interface{})
+			if cr.Label != "" {
+				fields[LabelKey] = cr.Label
+			}
+
+			conf.InitialFields = fields
 
 			return conf.Build()
 		})

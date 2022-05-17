@@ -115,10 +115,11 @@ func (s *Service) Register(app *framework.App) error {
 		if e == nil {
 			kernel.SetErrorHandler(&errors.StandardErrorHandler{
 				Debug: config.Debug,
-				Callback: func(ed errors.ErrorData) {
+				Callback: func(ed errors.ErrorData, request contracts.RequestContract) {
 					if ed.Fatal {
 						logger.WithOptions(zap.WithCaller(false),
 							zap.AddStacktrace(loggerTraceEnabler{})).Error(ed.Message, zap.Any("trace", ed.Traces),
+							zap.String("path", string(request.GetUri())),
 							zap.String("caller", fmt.Sprintf("%s:%d", ed.File, ed.Line)))
 					}
 				},
@@ -128,13 +129,17 @@ func (s *Service) Register(app *framework.App) error {
 			accessLogger, e := lm.Channel(s.config.AccessLogChannel)
 			if e == nil {
 				h.RequestLogger = func(request contracts.RequestContract, statusCode int, start time.Time) {
-
 					duration := time.Since(start)
-					accessLogger.WithOptions(zap.WithCaller(false)).Info("",
+					options := []zap.Field{
 						zap.String("remote", request.RemoteAddr()),
 						zap.String("latency", fmt.Sprintf("%.6fms", float64(duration)/float64(time.Millisecond))),
 						zap.String("path", string(request.GetUri())),
-						zap.Int("status_code", statusCode))
+						zap.Int("status_code", statusCode),
+					}
+					for _, lo := range loggingOptions {
+						options = append(options, lo(request, statusCode, start))
+					}
+					accessLogger.WithOptions(zap.WithCaller(false)).Info("", options...)
 				}
 			}
 		}

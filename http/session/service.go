@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"path/filepath"
 	"sync"
 	"time"
@@ -63,14 +64,21 @@ func GetHandler(name string) (session.Handler, error) {
 type Config struct {
 	Default     string `yaml:"default" env:"SESSION_HANDLER" default:"file"`
 	Dir         string `yaml:"dir" default:"sessions"`
-	MaxLifeTime int64  `yaml:"max_life_time" default:"600"`
+	MaxLifeTime int    `yaml:"max_life_time" default:"600"`
 	CacheStore  string `yaml:"cache_store" default:"session"`
 	CookieName  string `yaml:"cookie_name" default:"enorith-session" env:"COOKIE_NAME"`
+	Domain      string `yaml:"domain" default:""`
+	Path        string `yaml:"path" default:"/"`
+	Secure      bool   `yaml:"secure" default:"false"`
+	HttpOnly    bool   `yaml:"http_only" default:"true"`
+	SameSite    string `yaml:"same_site" default:"lax"`
+	Encrypted   bool   `yaml:"encrypted" default:"false"`
 }
 
 type Service struct {
 	config      Config
 	storagePath string
+	sameSite    http.SameSite
 }
 
 //Register service when app starting, before http server start
@@ -78,6 +86,20 @@ type Service struct {
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
 	app.Configure("session", &s.config)
+	if s.config.SameSite != "" {
+		switch s.config.SameSite {
+		case "default":
+			s.sameSite = http.SameSiteDefaultMode
+		case "lax":
+			s.sameSite = http.SameSiteLaxMode
+		case "strict":
+			s.sameSite = http.SameSiteStrictMode
+		case "none":
+			s.sameSite = http.SameSiteNoneMode
+		default:
+			s.sameSite = http.SameSiteDefaultMode
+		}
+	}
 
 	s.registerFileHandler()
 	err := s.registerCacheHandler()
@@ -151,14 +173,20 @@ func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestCon
 
 	ioc.BindFunc("middleware.session", func(c container.Interface) (interface{}, error) {
 		return Middleware{
-			manager:    Manager,
-			id:         id,
-			cookieName: s.config.CookieName,
+			manager:     Manager,
+			id:          id,
+			cookieName:  s.config.CookieName,
+			maxLifeTime: int(s.config.MaxLifeTime),
+			domain:      s.config.Domain,
+			path:        s.config.Path,
+			secure:      s.config.Secure,
+			httpOnly:    s.config.HttpOnly,
+			sameSite:    s.sameSite,
 		}, nil
 	}, true)
 
 }
 
 func NewService(storagePath string) *Service {
-	return &Service{storagePath: storagePath}
+	return &Service{storagePath: storagePath, sameSite: http.SameSiteDefaultMode}
 }

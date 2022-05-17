@@ -1,4 +1,9 @@
 default: cache # session driver, supports: file, cache
+cache_store: session
 dir: sessions
 max_life_time: 3600 # in second
-cache_store: session
+domain: ''
+path: '/'
+secure: false
+http_only: true
+same_site: lax # supports: default, lax, strict, none
