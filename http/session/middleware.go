@@ -26,6 +26,18 @@ func (m Middleware) Handle(r contracts.RequestContract, next pipeline.PipeHandle
 	if err != nil {
 		return content.ErrResponseFromError(err, 500, nil)
 	}
+	ses := m.manager.Get(m.id)
+	hp := make(History, 0)
+	ses.Get(hp.SessionKey(), &hp)
+	path := string(r.GetUri())
+	if hp.Latest() != path {
+		hp = append(hp, string(r.GetUri()))
+		if len(hp) > MaxHistoryPath {
+			hp = hp[1:]
+		}
+		ses.Set(hp.SessionKey(), hp)
+	}
+
 	resp := next(r)
 	if rc, ok := resp.(contracts.WithResponseCookies); ok {
 		rc.SetCookie(&http.Cookie{
