@@ -159,10 +159,10 @@ func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestCon
 		if len(cb) > 0 {
 			id = string(cb)
 		} else {
-			id = str.RandString(32)
+			id = str.RandString(64)
 		}
 	} else {
-		id = str.RandString(32)
+		id = str.RandString(64)
 	}
 
 	ioc.Bind(SessionID{}, SessionID{ID: id}, true)
@@ -185,6 +185,7 @@ func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestCon
 		}, nil
 	}, true)
 
+	ioc.WithInjector(NewSessionInjector(id))
 }
 
 func NewService(storagePath string) *Service {

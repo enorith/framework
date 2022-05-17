@@ -38,7 +38,7 @@ type Config struct {
 	Debug    bool   `yaml:"debug" env:"APP_DEBUG" default:"false"`
 	Locale   string `yaml:"locale" env:"APP_LOCALE" default:"en"`
 	Url      string `yaml:"url" env:"APP_URL" default:"http://localhost"`
-	Timezone string `yaml:"timezone" env:"APP_TIMEZONE" default:""`
+	Timezone string `yaml:"timezone" env:"APP_TIMEZONE" default:"UTC"`
 	Key      string `yaml:"key" env:"APP_KEY" default:"somerandomkey!!!"`
 }
 

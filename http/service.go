@@ -16,8 +16,13 @@ import (
 	"github.com/enorith/http/validation"
 	"github.com/enorith/http/validation/rule"
 	"github.com/enorith/logging"
+	"github.com/enorith/supports/reflection"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+)
+
+var (
+	containerType = reflection.InterfaceType[container.Interface]()
 )
 
 type Config struct {
@@ -86,6 +91,9 @@ func (s *Service) Register(app *framework.App) error {
 				hs.Lifetime(ioc, request)
 			}
 		}
+		ioc.BindFunc(containerType, func(c container.Interface) (interface{}, error) {
+			return ioc, nil
+		}, false)
 		return ioc
 	}, config.Debug)
 	server := NewServer(kernel)

@@ -3,6 +3,7 @@ package session
 import (
 	"net/http"
 
+	"github.com/enorith/http/content"
 	"github.com/enorith/http/contracts"
 	"github.com/enorith/http/pipeline"
 	"github.com/enorith/session"
@@ -21,7 +22,10 @@ type Middleware struct {
 }
 
 func (m Middleware) Handle(r contracts.RequestContract, next pipeline.PipeHandler) contracts.ResponseContract {
-	m.manager.Start(m.id)
+	err := m.manager.Start(m.id)
+	if err != nil {
+		return content.ErrResponseFromError(err, 500, nil)
+	}
 	resp := next(r)
 	if rc, ok := resp.(contracts.WithResponseCookies); ok {
 		rc.SetCookie(&http.Cookie{

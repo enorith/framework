@@ -44,5 +44,21 @@ func (e *AesEncrypter) Encrypt(data []byte) ([]byte, error) {
 }
 
 func NewAesEncrypter(key []byte) *AesEncrypter {
-	return &AesEncrypter{key: key}
+	return &AesEncrypter{key: AesNormalKey(key)}
+}
+
+// AesNormalKey key must be 16 24 32 bytes
+func AesNormalKey(key []byte) []byte {
+	l := len(key)
+	if l < 16 {
+		key = append(key, []byte("aA1bB2cC3dD4eE5fF6gG7")...)
+	}
+
+	if 16 <= l && l < 24 {
+		return key[:16]
+	} else if 24 <= l && l < 32 {
+		return key[:24]
+	} else {
+		return key[:32]
+	}
 }
