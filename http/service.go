@@ -11,7 +11,9 @@ import (
 	h "github.com/enorith/http"
 	"github.com/enorith/http/content"
 	"github.com/enorith/http/contracts"
+	"github.com/enorith/http/cors"
 	"github.com/enorith/http/errors"
+	"github.com/enorith/http/pipeline"
 	"github.com/enorith/http/router"
 	"github.com/enorith/http/validation"
 	"github.com/enorith/http/validation/rule"
@@ -32,6 +34,7 @@ type Config struct {
 	AccessLogChannel    string   `yaml:"access_log_channel"`
 	TrustedProxies      []string `yaml:"trusted_proxies"`
 	TrustedProxyHeaders []string `yaml:"trusted_proxy_headers"`
+	EnableCors          bool     `yaml:"enable_cors" env:"HTTP_ENABLE_CORS" default:"false"`
 }
 
 type HttpBoundle interface {
@@ -62,6 +65,8 @@ func (s *Service) WithRoutes(rg func(rw *router.Wrapper)) *Service {
 func (s *Service) Register(app *framework.App) error {
 
 	app.Configure("http", &s.config)
+	var cc cors.Config
+	app.Configure("cors", &cc)
 	content.SetTrustedProxies(s.config.TrustedProxies...)
 	content.SetTrustedProxyHeaderSets(s.config.TrustedProxyHeaders...)
 	validation.Register("unique", func(attribute string, r contracts.InputSource, args ...string) (rule.Rule, error) {
@@ -91,11 +96,24 @@ func (s *Service) Register(app *framework.App) error {
 				hs.Lifetime(ioc, request)
 			}
 		}
+
 		ioc.BindFunc(containerType, func(c container.Interface) (interface{}, error) {
 			return ioc, nil
 		}, false)
+
+		ioc.BindFunc("middleware.cors", func(c container.Interface) (interface{}, error) {
+			return cors.NewMiddleware(cc), nil
+		}, true)
+
 		return ioc
 	}, config.Debug)
+
+	if s.config.EnableCors {
+		kernel.SetMiddleware([]pipeline.RequestMiddleware{
+			cors.NewMiddleware(cc),
+		})
+	}
+
 	server := NewServer(kernel)
 
 	app.Bind(func(ioc container.Interface) {

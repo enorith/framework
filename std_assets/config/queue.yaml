@@ -1,5 +1,5 @@
-listen: true
-connection: nsq
+listen: true #env: QUEUE_LISTEN
+connection: nsq #env: QUEUE_CONNECTION
 running_workers:
   - nsq
   
