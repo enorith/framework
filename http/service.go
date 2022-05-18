@@ -101,10 +101,6 @@ func (s *Service) Register(app *framework.App) error {
 			return ioc, nil
 		}, false)
 
-		ioc.BindFunc("middleware.cors", func(c container.Interface) (interface{}, error) {
-			return cors.NewMiddleware(cc), nil
-		}, true)
-
 		return ioc
 	}, config.Debug)
 
