@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/enorith/authenticate v0.0.1
-	github.com/enorith/cache v0.0.8
+	github.com/enorith/cache v0.0.9
 	github.com/enorith/config v0.0.3
 	github.com/enorith/container v0.0.18
 	github.com/enorith/exception v0.0.2

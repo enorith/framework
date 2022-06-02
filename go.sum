@@ -60,8 +60,8 @@ github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFP
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/enorith/authenticate v0.0.1 h1:T5ebLVl9e1oHYwGb0GqksReaN64WFrYiZKQiyztJhJw=
 github.com/enorith/authenticate v0.0.1/go.mod h1:tuLNa+QqOydU0fdUTA+3QFFcNqmD/fKwlPagyROJHoQ=
-github.com/enorith/cache v0.0.8 h1:rz7nM6UpJu4an6t2LzJa/I1DQBav51urIYRJasgYZt4=
-github.com/enorith/cache v0.0.8/go.mod h1:MMmwLk/JBj7tKPUoEAkpJ2hthvqLJN0yI6gheq5A/gY=
+github.com/enorith/cache v0.0.9 h1:G7T7rsK9/WPz6WfQQ1NccttEykljZYx+DbkupCjgwjA=
+github.com/enorith/cache v0.0.9/go.mod h1:MMmwLk/JBj7tKPUoEAkpJ2hthvqLJN0yI6gheq5A/gY=
 github.com/enorith/config v0.0.3 h1:18rkHURVqUyDm/GkqpyRhsEUYrUtLh4yGkJ5mTjeEIU=
 github.com/enorith/config v0.0.3/go.mod h1:NTUbIXJekw07F1g6OyjTl1AN7/ZFilb1m1TS5ME4xKo=
 github.com/enorith/container v0.0.18 h1:jk/g3TzOxWRY1FXRFP10I+cXMGAHq+O4x4xhZBaREjY=
