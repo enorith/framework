@@ -22,8 +22,27 @@ type PageMeta struct {
 }
 
 type PageResult[T interface{}] struct {
-	Meta PageMeta `json:"meta"`
-	Data []T      `json:"data"`
+	Meta  PageMeta               `json:"meta"`
+	Data  []T                    `json:"data"`
+	Extra map[string]interface{} `json:"extra,omitempty"`
+}
+
+func (pr *PageResult[T]) With(key string, data interface{}) *PageResult[T] {
+	if pr.Extra == nil {
+		pr.Extra = make(map[string]interface{})
+	}
+	pr.Extra[key] = data
+
+	return pr
+}
+
+func (pr *PageResult[T]) WithOut(key string) *PageResult[T] {
+	if pr.Extra == nil {
+		pr.Extra = make(map[string]interface{})
+	}
+	delete(pr.Extra, key)
+
+	return pr
 }
 
 type Paginator[T interface{}] struct {
