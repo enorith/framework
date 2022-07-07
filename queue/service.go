@@ -8,6 +8,7 @@ import (
 	"github.com/enorith/config"
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
+	"github.com/enorith/framework/redis"
 	"github.com/enorith/logging"
 	"github.com/enorith/queue"
 	"github.com/enorith/queue/connections"
@@ -62,6 +63,11 @@ type NsqConfig struct {
 	Nsqlookupd string `yaml:"nsqlookupd" env:"QUEUE_NSQLOOKUPD"`
 	Channel    string `yaml:"channel" default:"default"`
 	Topic      string `yaml:"topic" default:"default"`
+}
+
+type RedisConfig struct {
+	Connection string `yaml:"connection" default:"queue"`
+	Queue      string `yaml:"queue" default:"enorith:queue"`
 }
 
 type Service struct {
@@ -175,5 +181,20 @@ func WithDefaults() {
 	RegisterDriver("mem", func(conf yaml.Node) (c.Connection, error) {
 
 		return connections.NewMem(), nil
+	})
+
+	RegisterDriver("redis", func(conf yaml.Node) (c.Connection, error) {
+		var c RedisConfig
+		e := config.UnmarshalNode(conf, &c)
+		if e != nil {
+			return nil, e
+		}
+
+		rdb, e := redis.Manager.GetConnection(c.Connection)
+		if e != nil {
+			return nil, e
+		}
+
+		return connections.NewRedis(rdb, c.Queue), nil
 	})
 }

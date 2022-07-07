@@ -12,13 +12,13 @@ require (
 	github.com/enorith/http v1.1.11
 	github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e
 	github.com/enorith/logging v0.0.7
-	github.com/enorith/queue v0.0.5
+	github.com/enorith/queue v0.0.9
 	github.com/enorith/redis v1.0.0
 	github.com/enorith/session v0.0.5
 	github.com/enorith/supports v0.1.7
 	github.com/go-co-op/gocron v1.11.0
 	github.com/go-redis/cache/v8 v8.4.2
-	github.com/go-redis/redis/v8 v8.11.3
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/valyala/fasthttp v1.34.0
 	go.uber.org/zap v1.19.1
