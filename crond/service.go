@@ -1,6 +1,7 @@
 package crond
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -10,6 +11,14 @@ import (
 )
 
 var Scheduler *gocron.Scheduler
+
+type CronRegister func(sch *gocron.Scheduler, ctx context.Context)
+
+var register CronRegister
+
+func RegisterCron(rg CronRegister) {
+	register = rg
+}
 
 type Service struct {
 }
@@ -26,9 +35,15 @@ func (s Service) Register(app *framework.App) error {
 	})
 
 	app.Daemon(func(exit chan struct{}) {
+		ctx, cancel := context.WithCancel(context.Background())
+		if register != nil {
+			register(Scheduler, ctx)
+		}
 		Scheduler.StartAsync()
 		log.Println("[cron] started")
 		<-exit
+		log.Println("[cron] stopping")
+		cancel()
 		Scheduler.Stop()
 		log.Println("[cron] stopped")
 	})
