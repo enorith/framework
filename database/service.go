@@ -66,6 +66,7 @@ func (s *Service) Register(app *framework.App) error {
 				envDsn := environment.GetString("DB_DSN")
 				if envDsn != "" {
 					dsn = envDsn
+					config.DSN = dsn
 				}
 			}
 			register, ok := GetDriverRegister(config.Driver)
