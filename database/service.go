@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/enorith/container"
+	"github.com/enorith/environment"
 	"github.com/enorith/framework"
 	"github.com/enorith/gormdb"
 	"github.com/enorith/http/contracts"
@@ -29,7 +30,7 @@ var (
 	PageParamsType  = reflection.InterfaceType[PageParams]()
 )
 
-//GetDriverRegister: get registerd driver
+// GetDriverRegister: get registerd driver
 func GetDriverRegister(name string) (DriverRegister, bool) {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -37,19 +38,19 @@ func GetDriverRegister(name string) (DriverRegister, bool) {
 	return register, ok
 }
 
-//RegisterDriver register db driver
+// RegisterDriver register db driver
 func RegisterDriver(name string, dr DriverRegister) {
 	mu.Lock()
 	defer mu.Unlock()
 	driverRegisters[name] = dr
 }
 
-//Service of database
+// Service of database
 type Service struct {
 	config Config
 }
 
-//Register service when app starting, before http server start
+// Register service when app starting, before http server start
 // you can configure service, initialize global vars etc.
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
@@ -60,6 +61,13 @@ func (s *Service) Register(app *framework.App) error {
 	for name, cc := range s.config.Connections {
 		config := cc
 		gormdb.DefaultManager.Register(name, func() (*gorm.DB, error) {
+			dsn := config.DSN
+			if name == s.config.Default {
+				envDsn := environment.GetString("DB_DSN")
+				if envDsn != "" {
+					dsn = envDsn
+				}
+			}
 			register, ok := GetDriverRegister(config.Driver)
 			if !ok {
 				return nil, fmt.Errorf("unregistered database driver [%s]", config.Driver)
@@ -72,7 +80,7 @@ func (s *Service) Register(app *framework.App) error {
 					SlowThreshold: 300 * time.Millisecond,
 				}
 			}
-			tx, e := gorm.Open(register(config.DSN), conf)
+			tx, e := gorm.Open(register(dsn), conf)
 			if e != nil {
 				return nil, e
 			}
@@ -107,7 +115,7 @@ func (s *Service) Register(app *framework.App) error {
 	return nil
 }
 
-//Lifetime container callback
+// Lifetime container callback
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
 func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
