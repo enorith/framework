@@ -60,9 +60,10 @@ func (s *Service) Register(app *framework.App) error {
 
 	for name, cc := range s.config.Connections {
 		config := cc
-		gormdb.DefaultManager.Register(name, func() (*gorm.DB, error) {
+		n := name
+		gormdb.DefaultManager.Register(n, func() (*gorm.DB, error) {
 			dsn := config.DSN
-			if name == s.config.Default {
+			if n == s.config.Default {
 				envDsn := environment.GetString("DB_DSN")
 				if envDsn != "" {
 					dsn = envDsn
