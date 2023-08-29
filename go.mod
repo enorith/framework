@@ -15,7 +15,7 @@ require (
 	github.com/enorith/logging v0.0.7
 	github.com/enorith/queue v0.0.9
 	github.com/enorith/redis v1.0.0
-	github.com/enorith/session v0.0.5
+	github.com/enorith/session v0.0.7
 	github.com/enorith/supports v0.1.7
 	github.com/go-co-op/gocron v1.11.0
 	github.com/go-redis/cache/v8 v8.4.2
