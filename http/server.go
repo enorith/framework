@@ -93,5 +93,5 @@ func NewServer(k *h.Kernel) *Server {
 }
 
 func logPrefix(handler string) string {
-	return fmt.Sprintf("enorith/%s (%s)", h.Version, handler)
+	return fmt.Sprintf("enorith/http/%s (%s)", h.Version, handler)
 }
