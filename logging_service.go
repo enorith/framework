@@ -1,6 +1,8 @@
 package framework
 
 import (
+	"time"
+
 	"github.com/enorith/container"
 	"github.com/enorith/logging"
 	"go.uber.org/zap"
@@ -28,7 +30,7 @@ type LoggingService struct {
 	baseDir string
 }
 
-//Register service when app starting, before http server start
+// Register service when app starting, before http server start
 // you can configure service, prepare global vars etc.
 // running at main goroutine
 func (s *LoggingService) Register(app *App) error {
@@ -75,6 +77,17 @@ func (s *LoggingService) Register(app *App) error {
 		ioc.BindFunc(&logging.Manager{}, func(c container.Interface) (interface{}, error) {
 			return logging.DefaultManager, nil
 		}, true)
+	})
+	app.Daemon(func(exit chan struct{}) {
+		for {
+			select {
+			case <-exit:
+				logging.DefaultManager.Sync()
+				return
+			case <-time.After(5 * time.Minute):
+				logging.DefaultManager.Cleanup()
+			}
+		}
 	})
 
 	return nil

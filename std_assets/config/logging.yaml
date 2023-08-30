@@ -14,4 +14,4 @@ channels:
     label: http
   database:
     outputs:
-      - rotate:///database.log
+      - rotate:///database.log # rotate:///database.log?time_format=2006-01-02T15 04 05&limit=3
