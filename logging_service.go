@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"log"
 	"time"
 
 	"github.com/enorith/container"
@@ -79,10 +80,13 @@ func (s *LoggingService) Register(app *App) error {
 		}, true)
 	})
 	app.Daemon(func(exit chan struct{}) {
+		log.Println("[logging] service cleanup started")
+		logging.DefaultManager.Cleanup()
 		for {
 			select {
 			case <-exit:
 				logging.DefaultManager.Sync()
+				log.Println("[logging] service exit")
 				return
 			case <-time.After(5 * time.Minute):
 				logging.DefaultManager.Cleanup()
