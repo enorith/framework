@@ -82,6 +82,7 @@ func (s *Service) Register(app *framework.App) error {
 					SlowThreshold: 300 * time.Millisecond,
 				}
 			}
+			conf.DisableForeignKeyConstraintWhenMigrating = !s.config.WithForeignKey
 			tx, e := gorm.Open(register(dsn), conf)
 			if e != nil {
 				return nil, e

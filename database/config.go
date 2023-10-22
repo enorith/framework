@@ -19,6 +19,7 @@ type Config struct {
 	ImplicitInjection bool   `yaml:"implicit_injection"`
 	AuthMigrate       bool   `yaml:"migrate"`
 	LogChannel        string `yaml:"log_channel"`
+	WithForeignKey    bool   `yaml:"with_foreign_key" default:"false"`
 }
 
 var (
