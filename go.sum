@@ -61,8 +61,8 @@ github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5m
 github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21/go.mod h1:+020luEh2TKB4/GOp8oxxtq0Daoen/Cii55CzbTV6DU=
 github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFPTqq+I=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
-github.com/enorith/authenticate v0.0.1 h1:T5ebLVl9e1oHYwGb0GqksReaN64WFrYiZKQiyztJhJw=
-github.com/enorith/authenticate v0.0.1/go.mod h1:tuLNa+QqOydU0fdUTA+3QFFcNqmD/fKwlPagyROJHoQ=
+github.com/enorith/authenticate v0.0.2 h1:Slh5+bLKdsJylfxBr154e6kqC24XQ4olgPHZk0YWVGg=
+github.com/enorith/authenticate v0.0.2/go.mod h1:tuLNa+QqOydU0fdUTA+3QFFcNqmD/fKwlPagyROJHoQ=
 github.com/enorith/cache v0.0.9 h1:G7T7rsK9/WPz6WfQQ1NccttEykljZYx+DbkupCjgwjA=
 github.com/enorith/cache v0.0.9/go.mod h1:MMmwLk/JBj7tKPUoEAkpJ2hthvqLJN0yI6gheq5A/gY=
 github.com/enorith/config v0.0.3 h1:18rkHURVqUyDm/GkqpyRhsEUYrUtLh4yGkJ5mTjeEIU=

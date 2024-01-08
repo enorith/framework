@@ -3,7 +3,7 @@ module github.com/enorith/framework
 go 1.18
 
 require (
-	github.com/enorith/authenticate v0.0.1
+	github.com/enorith/authenticate v0.0.2
 	github.com/enorith/cache v0.0.9
 	github.com/enorith/config v0.0.3
 	github.com/enorith/container v0.1.0
@@ -26,7 +26,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gorm.io/driver/mysql v1.3.3
-	gorm.io/gorm v1.23.4    
+	gorm.io/gorm v1.23.4
 )
 
 require (
@@ -37,7 +37,7 @@ require (
 	github.com/go-errors/errors v1.4.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.1.0 // indirect
-	github.com/golang/snappy v0.0.3 // indirect 
+	github.com/golang/snappy v0.0.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

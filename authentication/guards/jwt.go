@@ -5,7 +5,7 @@ import "github.com/enorith/http/contracts"
 //JWTConfig jwt auth guard config
 type JWTConfig struct {
 	Key string `yaml:"key" env:"AUTH_JWT_KEY"`
-	TTL int    `yaml:"ttl" env:"AUTH_JWT_TTL"`
+	TTL int64  `yaml:"ttl" env:"AUTH_JWT_TTL"`
 }
 
 //TokenProvider of jwt auth guard

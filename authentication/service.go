@@ -16,7 +16,7 @@ type Service struct {
 	config Config
 }
 
-//Register service when app starting, before http server start
+// Register service when app starting, before http server start
 // you can configure service, initialize global vars etc.
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
@@ -29,11 +29,11 @@ func (s *Service) withJWT(app *framework.App) {
 	var jwtConfig guards.JWTConfig
 	app.Configure("jwt", &jwtConfig)
 	AuthManager.RegisterDriver("jwt", func(up AuthProvider, r contracts.RequestContract) (authenticate.Guard, error) {
-		return jwt.NewJwtGuard(guards.TokenProvider{Request: r}, up, []byte(jwtConfig.Key)), nil
+		return jwt.NewJwtGuard(guards.TokenProvider{Request: r}, up, []byte(jwtConfig.Key), jwtConfig.TTL), nil
 	})
 }
 
-//Lifetime container callback
+// Lifetime container callback
 // usually register request lifetime instance to IoC-Container (per-request unique)
 // this function will run before every request
 func (s *Service) Lifetime(ioc container.Interface, request contracts.RequestContract) {
