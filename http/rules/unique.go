@@ -17,6 +17,10 @@ type Unique struct {
 	connection    string
 }
 
+func (u *Unique) RoleName() string {
+	return "unique"
+}
+
 func (u *Unique) Passes(input contracts.InputValue) (success bool, skipAll bool) {
 	var count int64
 	if u.db == nil {

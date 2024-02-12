@@ -75,8 +75,8 @@ github.com/enorith/exception v0.0.2 h1:Z2SMN7zx2UaXKh49wbc2YwgQ8xUcsOQ6J2ecq6q3s
 github.com/enorith/exception v0.0.2/go.mod h1:OiHWfkZXqUU7JwAMFRRM6abSwjBZuX0P4kLLxndKTzk=
 github.com/enorith/gormdb v0.1.1 h1:F36RDNqA0JE8r/tR3bAnjvmaehlE4z3nZ0hhZWZbvyw=
 github.com/enorith/gormdb v0.1.1/go.mod h1:7QJXANMqSvqizuX2veUBem06UkkFUuvs0q2QNAE+sIU=
-github.com/enorith/http v1.1.11 h1:ei850FH4lXCqHgm8S7EOhb+o33uXqBxJkko8eKucV6Y=
-github.com/enorith/http v1.1.11/go.mod h1:AAmcF1tMjIYjn7m76e9nDoF/bfRiSm0zC/w5MtNePBU=
+github.com/enorith/http v1.1.13 h1:449rjoXNw8pR7sPcVOkcE31nASHtAJIIW5Xfx/cRr3g=
+github.com/enorith/http v1.1.13/go.mod h1:AAmcF1tMjIYjn7m76e9nDoF/bfRiSm0zC/w5MtNePBU=
 github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e h1:Ea3RC9iiBk25Ylnb78eqU3hCZcD3mr0IjyWUbbJNgfU=
 github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e/go.mod h1:lR6+6amExYujU7vx/8JEddpv2xlCf2sUXciyg8JKJ7g=
 github.com/enorith/logging v0.0.8 h1:4C0SGtzuDl9u3B5INqXf131atbXTXhVR/VCPHbQRwfE=
