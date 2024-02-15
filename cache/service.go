@@ -26,7 +26,7 @@ type StoreConfig struct {
 }
 
 type CacheConfig struct {
-	Store  string                 `yaml:"store" env:"CACHE_DRIVER" default:"go_cache"`
+	Store  string                 `yaml:"store" env:"CACHE_STORE" default:"go_cache"`
 	Prefix string                 `yaml:"prefix" env:"CACHE_PREFIX"`
 	Stores map[string]StoreConfig `yaml:"stores"`
 }
