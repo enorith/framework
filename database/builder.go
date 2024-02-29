@@ -22,8 +22,8 @@ func (b *Builder[T]) First(conds ...interface{}) (result T, err error) {
 	err = b.DB.Model(model).First(&result, conds...).Error
 	return
 }
-func (b *Builder[T]) Paginate() (*PageResult[T], error) {
-	return b.Paginator.Paginate(b.DB)
+func (b *Builder[T]) Paginate(opts ...PaginateOptions) (*PageResult[T], error) {
+	return b.Paginator.Paginate(b.DB, opts...)
 }
 
 func NewBuilder[T interface{}](tx *gorm.DB, paginator Paginator[T]) *Builder[T] {

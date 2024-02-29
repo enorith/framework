@@ -49,11 +49,25 @@ type Paginator[T interface{}] struct {
 	Params PageParams
 }
 
-func (p Paginator[T]) Paginate(tx *gorm.DB) (*PageResult[T], error) {
+type PaginateOptions struct {
+	AggTableScope func(tx *gorm.DB) *gorm.DB
+}
+
+func (p Paginator[T]) Paginate(tx *gorm.DB, opts ...PaginateOptions) (*PageResult[T], error) {
 	var (
 		meta    PageMeta
 		targets []T
 	)
+	opt := PaginateOptions{
+		AggTableScope: func(tx *gorm.DB) *gorm.DB {
+			return tx
+		},
+	}
+	if len(opts) > 0 {
+		if opts[0].AggTableScope != nil {
+			opt.AggTableScope = opts[0].AggTableScope
+		}
+	}
 	page := p.Params.Page()
 	perPage := p.Params.PerPage()
 	if page < 1 {
@@ -70,7 +84,7 @@ func (p Paginator[T]) Paginate(tx *gorm.DB) (*PageResult[T], error) {
 		NewDB: true,
 	})
 	tx.Statement.Dest = targets
-	e := newTx.Table("(?) aggragate", tx).Count(&meta.Total).Error
+	e := newTx.Table("(?) aggragate", opt.AggTableScope(tx.Session(&gorm.Session{}))).Count(&meta.Total).Error
 	if e != nil {
 		return nil, e
 	}
