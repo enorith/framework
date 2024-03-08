@@ -53,13 +53,13 @@ type Service struct {
 	config Config
 }
 
-//WithRoutes, with http routes
+// WithRoutes, with http routes
 func (s *Service) WithRoutes(rg func(rw *router.Wrapper)) *Service {
 	s.rg = rg
 	return s
 }
 
-//Register service when app starting, before http server start
+// Register service when app starting, before http server start
 // you can configure service, prepare global vars etc.
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
@@ -142,6 +142,7 @@ func (s *Service) Register(app *framework.App) error {
 						logger.WithOptions(zap.WithCaller(false),
 							zap.AddStacktrace(loggerTraceEnabler{})).Error(ed.Message, zap.Any("trace", ed.Traces),
 							zap.String("path", string(request.GetUri())),
+							zap.String("method", request.GetMethod()),
 							zap.String("caller", fmt.Sprintf("%s:%d", ed.File, ed.Line)))
 					}
 				},
@@ -156,6 +157,7 @@ func (s *Service) Register(app *framework.App) error {
 						zap.String("remote", request.RemoteAddr()),
 						zap.String("latency", fmt.Sprintf("%.6fms", float64(duration)/float64(time.Millisecond))),
 						zap.String("path", string(request.GetUri())),
+						zap.String("method", request.GetMethod()),
 						zap.Int("status_code", statusCode),
 					}
 					for _, lo := range loggingOptions {
