@@ -28,6 +28,12 @@ var (
 	PageKey         = "page"
 	PageSizeKey     = "per_page"
 	PageParamsType  = reflection.InterfaceType[PageParams]()
+	logLevelMap     = map[string]logger.LogLevel{
+		"info":   logger.Info,
+		"warn":   logger.Warn,
+		"error":  logger.Error,
+		"silent": logger.Silent,
+	}
 )
 
 // GetDriverRegister: get registerd driver
@@ -56,7 +62,7 @@ type Service struct {
 func (s *Service) Register(app *framework.App) error {
 	app.Configure("database", &s.config)
 	WithDefaults()
-	log, _ := logging.DefaultManager.Channel(s.config.LogChannel)
+	defaultLogger, _ := logging.DefaultManager.Channel(s.config.LogChannel)
 
 	for name, cc := range s.config.Connections {
 		config := cc
@@ -70,16 +76,33 @@ func (s *Service) Register(app *framework.App) error {
 					config.DSN = dsn
 				}
 			}
+			log := defaultLogger
+			if lc := config.LogChannel; lc != "" {
+				log, _ = logging.DefaultManager.Channel(lc)
+				if log == nil {
+					log = defaultLogger
+				}
+			}
+			logLevel := logger.Info
+			if ll := config.LogLevel; ll != "" {
+				var ok bool
+				logLevel, ok = logLevelMap[ll]
+				if !ok {
+					logLevel = logger.Info
+				}
+			}
+
 			register, ok := GetDriverRegister(config.Driver)
 			if !ok {
 				return nil, fmt.Errorf("unregistered database driver [%s]", config.Driver)
 			}
 			conf := &gorm.Config{}
-			if log != nil {
+			if defaultLogger != nil {
 				conf.Logger = &Logger{
-					logLevel:      logger.Info,
+					logLevel:      logLevel,
 					logger:        log,
 					SlowThreshold: 300 * time.Millisecond,
+					withMigration: s.config.WithMigrationLog,
 				}
 			}
 			conf.DisableForeignKeyConstraintWhenMigrating = !s.config.WithForeignKey
@@ -104,8 +127,8 @@ func (s *Service) Register(app *framework.App) error {
 	if s.config.AuthMigrate && Migrator != nil {
 		if tx, e := gormdb.DefaultManager.GetConnection(); e == nil {
 			Migrator(tx)
-		} else if log != nil {
-			log.Error("[database] migration error %v")
+		} else if defaultLogger != nil {
+			defaultLogger.Error("[database] migration error %v")
 		}
 	}
 

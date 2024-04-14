@@ -3,8 +3,10 @@ package database
 import "time"
 
 type ConnectionConfig struct {
-	Driver string `yaml:"driver" default:"mysql"`
-	DSN    string `yaml:"dsn"`
+	Driver     string `yaml:"driver" default:"mysql"`
+	DSN        string `yaml:"dsn"`
+	LogChannel string `yaml:"log_channel"`
+	LogLevel   string `yaml:"log_level" default:"info"`
 }
 
 type Config struct {
@@ -20,6 +22,7 @@ type Config struct {
 	AuthMigrate       bool   `yaml:"migrate"`
 	LogChannel        string `yaml:"log_channel"`
 	WithForeignKey    bool   `yaml:"with_foreign_key" default:"false"`
+	WithMigrationLog  bool   `yaml:"with_migration_log" default:"false"`
 }
 
 var (
