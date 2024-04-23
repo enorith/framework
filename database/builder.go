@@ -8,7 +8,8 @@ type Builder[T interface{}] struct {
 }
 
 func (b *Builder[T]) Query(fn func(*gorm.DB) *gorm.DB) *Builder[T] {
-	return NewBuilder(b.DB.Scopes(fn), b.Paginator)
+	var model T
+	return NewBuilder(b.DB.Model(&model).Scopes(fn), b.Paginator)
 }
 
 func (b *Builder[T]) Get() (result []T, err error) {
