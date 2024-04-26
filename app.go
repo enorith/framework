@@ -33,6 +33,8 @@ var AppConfig Config
 // ConfigExt: default config extension
 var ConfigExt = ".yaml"
 
+const AppVersion = "v0.1.16"
+
 // Config of application
 type Config struct {
 	Env      string `yaml:"env" env:"APP_ENV" default:"production"`
@@ -54,6 +56,7 @@ type App struct {
 	container       container.Interface
 	handlers        []interface{}
 	logDir          string
+	consoleService  *ConsoleService
 }
 
 // Bind instance to global ioc-container
@@ -239,6 +242,7 @@ func NewApp(configFs fs.FS, logDir string) *App {
 		container:       container.New(),
 		handlers:        make([]interface{}, 0),
 		logDir:          logDir,
+		consoleService:  &ConsoleService{},
 	}
 	app.Configure(AppConfigName, &app.config)
 
