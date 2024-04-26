@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var testDSN = "root:root@tcp(127.0.0.1:3306)/enorith"
+var testDSN = "root:632258@tcp(192.168.8.21:3306)/cdut_role"
 
 type User struct {
 	ID        int    `gorm:"column:id"`
