@@ -38,20 +38,15 @@ func Test_Builder(t *testing.T) {
 		Ps: 10,
 	}))
 
-	u, _ := b.First(12)
-	fmt.Println(u)
-
 	us, e := b.Query(func(d *gorm.DB) *gorm.DB {
-		return d.Where("id > ?", 1)
-	}).Get()
+		return d.Where("id > ?", 1).Order("id desc")
+	}).Paginate()
 
 	if e != nil {
 		t.Fatal(e)
 	}
 
-	for _, u := range us {
-		fmt.Println(u)
-	}
+	fmt.Println(us)
 }
 
 func init() {
