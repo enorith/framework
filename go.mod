@@ -10,7 +10,7 @@ require (
 	github.com/enorith/environment v0.0.2
 	github.com/enorith/exception v0.0.2
 	github.com/enorith/gormdb v0.1.1
-	github.com/enorith/http v1.2.0
+	github.com/enorith/http v1.2.3
 	github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e
 	github.com/enorith/logging v0.0.8
 	github.com/enorith/queue v0.0.9
@@ -49,7 +49,6 @@ require (
 	github.com/nsqio/go-nsq v1.0.8 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/vmihailenco/go-tinylfu v0.2.1 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
