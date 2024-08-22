@@ -12,6 +12,7 @@ import (
 	"github.com/enorith/http/contracts"
 	"github.com/enorith/logging"
 	"github.com/enorith/supports/reflection"
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -171,5 +172,54 @@ func NewService() *Service {
 func WithDefaults() {
 	RegisterDriver("mysql", func(dsn string) gorm.Dialector {
 		return mysql.Open(dsn)
+	})
+}
+
+func RegisterFromConfig(name string, config ConnectionConfig, defaultLogger *zap.Logger) {
+	gormdb.DefaultManager.Register(name, func() (*gorm.DB, error) {
+		dsn := config.DSN
+		log := defaultLogger
+		if lc := config.LogChannel; lc != "" {
+			log, _ = logging.DefaultManager.Channel(lc)
+			if log == nil {
+				log = defaultLogger
+			}
+		}
+		logLevel := logger.Info
+		if ll := config.LogLevel; ll != "" {
+			var ok bool
+			logLevel, ok = logLevelMap[ll]
+			if !ok {
+				logLevel = logger.Info
+			}
+		}
+
+		register, ok := GetDriverRegister(config.Driver)
+		if !ok {
+			return nil, fmt.Errorf("unregistered database driver [%s]", config.Driver)
+		}
+		conf := &gorm.Config{}
+		if defaultLogger != nil {
+			conf.Logger = &Logger{
+				logLevel:      logLevel,
+				logger:        log,
+				SlowThreshold: 300 * time.Millisecond,
+				withMigration: false,
+			}
+		}
+		conf.DisableForeignKeyConstraintWhenMigrating = false
+		tx, e := gorm.Open(register(dsn), conf)
+		if e != nil {
+			return nil, e
+		}
+		db, e := tx.DB()
+		if e != nil {
+			return nil, e
+		}
+		db.SetMaxIdleConns(MaxIdelConns)
+		db.SetMaxOpenConns(MaxOpenConns)
+		db.SetConnMaxIdleTime(MaxIdleTime)
+		db.SetConnMaxLifetime(MaxLifeTime)
+		return tx, e
 	})
 }
