@@ -13,7 +13,7 @@ require (
 	github.com/enorith/http v1.2.3
 	github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e
 	github.com/enorith/logging v0.0.8
-	github.com/enorith/queue v0.0.9
+	github.com/enorith/queue v0.1.0
 	github.com/enorith/redis v1.0.0
 	github.com/enorith/session v0.0.7
 	github.com/enorith/supports v0.1.7
@@ -31,6 +31,7 @@ require (
 )
 
 require (
+	github.com/alitto/pond v1.9.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
