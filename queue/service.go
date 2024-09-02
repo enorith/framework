@@ -74,7 +74,7 @@ type Service struct {
 	config Config
 }
 
-//Register service when app starting, before http server start
+// Register service when app starting, before http server start
 // you can configure service, prepare global vars etc.
 // running at main goroutine
 func (s *Service) Register(app *framework.App) error {
@@ -107,7 +107,7 @@ func (s *Service) Register(app *framework.App) error {
 
 func (s *Service) withInvoker(app *framework.App) {
 	ioc := app.Container()
-	std.Invoker = func(payloadType reflect.Type, payloadValue, funcValue reflect.Value, funcType reflect.Type) {
+	std.Invoker = func(payloadType reflect.Type, payloadValue, funcValue reflect.Value, funcType reflect.Type) error {
 		var params []reflect.Value
 		if payloadType.Kind() == reflect.Ptr {
 			params = []reflect.Value{payloadValue}
@@ -120,17 +120,24 @@ func (s *Service) withInvoker(app *framework.App) {
 			v, e := ioc.Instance(argType)
 			if e != nil {
 				logging.Infof("[queue] invoke handler error: %v, try to instance %s", e, argType)
-				return
+				return e
 			}
 
 			if !v.IsValid() {
 				logging.Infof("[queue] invoke handler error: invalid instance, try to instance %s", argType)
-				return
+				return fmt.Errorf("[queue] invalid instance")
 			}
 			params = append(params, v)
 		}
 
-		funcValue.Call(params)
+		res := funcValue.Call(params)
+		if len(res) > 0 {
+			if err, ok := res[0].Interface().(error); ok {
+				return err
+			}
+		}
+
+		return nil
 	}
 }
 
