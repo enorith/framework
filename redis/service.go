@@ -6,7 +6,7 @@ import (
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
 	"github.com/enorith/redis"
-	rds "github.com/go-redis/redis/v8"
+	rds "github.com/redis/go-redis/v9"
 )
 
 var Manager *redis.Manager
