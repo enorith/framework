@@ -19,7 +19,7 @@ type Config struct {
 	//      })
 	//
 	ImplicitInjection bool   `yaml:"implicit_injection"`
-	AuthMigrate       bool   `yaml:"migrate"`
+	AuthMigrate       bool   `yaml:"migrate" env:"DB_MIGRATE"`
 	LogChannel        string `yaml:"log_channel"`
 	WithForeignKey    bool   `yaml:"with_foreign_key" default:"false"`
 	WithMigrationLog  bool   `yaml:"with_migration_log" default:"false"`
