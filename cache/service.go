@@ -9,9 +9,9 @@ import (
 	"github.com/enorith/container"
 	"github.com/enorith/framework"
 	appRedis "github.com/enorith/framework/redis"
-	"github.com/go-redis/cache/v8"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/cache/v9"
 	gc "github.com/patrickmn/go-cache"
+	"github.com/redis/go-redis/v9"
 	"gopkg.in/yaml.v3"
 )
 
