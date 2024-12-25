@@ -12,13 +12,13 @@ require (
 	github.com/enorith/environment v0.0.2
 	github.com/enorith/exception v0.0.2
 	github.com/enorith/gormdb v0.1.1
-	github.com/enorith/http v1.2.7
+	github.com/enorith/http v1.2.9
 	github.com/enorith/language v0.0.0-20210311034453-b97f7834a24e
 	github.com/enorith/logging v0.0.8
 	github.com/enorith/queue v0.1.1
 	github.com/enorith/redis v1.0.1
-	github.com/enorith/session v0.0.7
-	github.com/enorith/supports v0.1.7
+	github.com/enorith/session v0.0.9
+	github.com/enorith/supports v0.2.3
 	github.com/go-co-op/gocron v1.11.0
 	github.com/go-redis/cache/v9 v9.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -29,7 +29,7 @@ require (
 	golang.org/x/crypto v0.24.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.3.3
-	gorm.io/gorm v1.23.4
+	gorm.io/gorm v1.25.11
 )
 
 require (
@@ -44,7 +44,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.1.0 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -59,5 +59,6 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 )

@@ -107,6 +107,7 @@ func (s *Service) Register(app *framework.App) error {
 				}
 			}
 			conf.DisableForeignKeyConstraintWhenMigrating = !s.config.WithForeignKey
+			conf.IgnoreRelationshipsWhenMigrating = s.config.WithoutRelationships
 			tx, e := gorm.Open(register(dsn), conf)
 			if e != nil {
 				return nil, e

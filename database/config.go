@@ -18,11 +18,12 @@ type Config struct {
 	//			return user
 	//      })
 	//
-	ImplicitInjection bool   `yaml:"implicit_injection"`
-	AuthMigrate       bool   `yaml:"migrate" env:"DB_MIGRATE"`
-	LogChannel        string `yaml:"log_channel"`
-	WithForeignKey    bool   `yaml:"with_foreign_key" default:"false"`
-	WithMigrationLog  bool   `yaml:"with_migration_log" default:"false"`
+	ImplicitInjection    bool   `yaml:"implicit_injection"`
+	AuthMigrate          bool   `yaml:"migrate" env:"DB_MIGRATE"`
+	LogChannel           string `yaml:"log_channel"`
+	WithForeignKey       bool   `yaml:"with_foreign_key" default:"false"`
+	WithoutRelationships bool   `yaml:"without_relationships" default:"false"`
+	WithMigrationLog     bool   `yaml:"with_migration_log" default:"false"`
 }
 
 var (
